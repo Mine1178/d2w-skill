@@ -14,8 +14,8 @@
 - **管道化审核**：`--auto-review` 自动生成审核草稿，AI 只填判断
 - **5 维评分收敛**：正确性/可维护性/性能/安全/界面，收敛线 = 实际评维数 × 4
 - **一站式交付**：开发收敛后自动派活打包 EXE → Inno 安装程序 → PDF 使用手册 → DOD 归档
-- **GUI 硬规范**：默认 Wifibond 左导航布局、界面质量 L1~L10 验收（含关于页赞助按钮）
-- **模型可切换**：默认 glm-5.3，一句话切 kimi-k3-1 / deep-model / Claude-4.0 等
+- **GUI 硬规范**：默认 Wifibond 左导航布局、界面质量 L1~L11 验收（含关于页赞助弹窗 + 文本排版无孤行）
+- **模型可切换**：默认 glm-5.3，一句话切 kimi-k3-1 / deep-model / Claude-4.0（`default-1.2`）等
 - **跨盘符 CLI 探测**：换机零配置，自动定位 WorkBuddy headless CLI
 - **安全边界**：危险命令默认拦截、token 内存提取、serve 仅绑 loopback
 

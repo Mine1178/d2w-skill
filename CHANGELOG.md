@@ -3,6 +3,15 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.11] — 2026-10-12
+
+README 过时描述修正（v1.5.9/v1.5.10 同步遗漏）。
+
+### Fixed
+
+- L 组验收范围：L1~L10 → L1~L11（补文本排版 L11）
+- Claude-4.0 模型 id 补全：`default-1.2`
+
 ## [1.5.10] — 2026-10-12
 
 深度审计修复（静态审计，非 kimi-k3-1 派活——WorkBuddy 未真正执行）。
