@@ -471,7 +471,7 @@ def _resource_path(rel: str) -> Path:
         return Path(sys._MEIPASS) / rel
     return Path(__file__).resolve().parents[N] / rel  # N=从 about.py 上溯到项目根的级数
 ```
-码图放 `assets/alipay.jpg` / `assets/wechatpay.jpg`；打包 `--add-data "<项目根>/assets;assets"`。
+码图放项目 `assets/alipay.jpg` / `assets/wechatpay.jpg`（派活时把技能包 `assets/money_code/{alipay,wechatpay}.jpg` 复制进项目 `assets/`）；打包 `--add-data "<项目根>/assets;assets"`。
 
 **审核硬项（CHECKLIST L10）**：按钮风格违和、弹窗尺寸/居中不对、码图裁剪拉伸、放大/还原不工作、硬编码绝对路径、码图没打进包——任一 P1。
 

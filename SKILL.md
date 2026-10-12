@@ -101,7 +101,7 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
   - 弹窗：Toplevel 模态，默认 1060×880，minsize 720×560，resizable(True,True)，屏幕居中（不跟随按钮），transient+grab_set
   - 内部：顶部 ☕ 36pt 橙色 → 主文案"如果你喜欢这个工具"（section+4 加粗居中）→ 副文案"可以请作者喝杯咖啡，感谢赞助"（body+2 灰）→ 中间码图区 expand=True fill=BOTH（两列等宽 grid，480×480 thumbnail LANCZOS 白底 bd=2，下方「📱 支付宝扫码」/「💬 微信扫码」）→ 底部「⤢ 放大」+「关闭」并排居中
   - 一键放大：点「⤢ 放大」保存 geometry → `dlg.state("zoomed")` 全屏 → 按钮变「🗗 还原」；再点恢复 geometry；闭包存 `state={"zoomed":False,"normal_geom":...}`
-  - 码图路径：`assets/alipay.jpg` / `assets/wechatpay.jpg`，用 `_resource_path()`（PyInstaller `_MEIPASS` 兼容），打包 `--add-data "<项目根>/assets;assets"`
+  - 码图路径：项目里读 `assets/alipay.jpg` / `assets/wechatpay.jpg`（派活时把技能包 `assets/money_code/{alipay,wechatpay}.jpg` 复制进项目 `assets/`），用 `_resource_path()`（PyInstaller `_MEIPASS` 兼容），打包 `--add-data "<项目根>/assets;assets"`
 - **验收方式**：实际运行 + 截图目检逐项过（布局/遮挡/对齐/DPI），发现"布局错乱/文字截断/按钮不对齐"按 P0/P1 报
 - CHECKLIST 用 L 组（界面质量 GUI 必检，L1~L11 含布局统一与赞助按钮）逐条打勾
 

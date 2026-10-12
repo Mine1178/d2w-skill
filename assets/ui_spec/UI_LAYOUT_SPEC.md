@@ -145,7 +145,7 @@ GUI 里所有多行文本（说明、错误提示、长 label、卡片描述、�
 | **按钮五级** | 扁平无边框（bd=0, cursor="hand2"）：primary 橙底白字（主动作）/ secondary 浅底深字（次动作）/ info 蓝底白字 / success 绿底白字 / danger 红底白字；内边距 padx=12 pady=4；按钮组水平排列间距 8px |
 | **空状态** | 无数据时显示灰色引导文案（如「暂无规则——点击新增规则添加第一条」），不显示空白表格 |
 | **弹窗/模态** | transient + lift + grab_set；resizable(False)；居中于主窗；内边距 padx=16；长文本 wraplength 自适应 |
-| **关于页 / 赞助弹窗** | 按钮「☕ 赞助作者」放关于页底部版权信息上方，secondary 浅底深字（bg=#f1f5f9, bd=1, padx=16 pady=6, hover #e2e8f0）；点击弹 Toplevel 模态（1060×880，minsize 720×560，resizable，屏幕居中）：顶部 ☕ 36pt 橙色 + 主/副文案居中，中间两列等宽码图（480×480 LANCZOS thumbnail，白底 bd=2，下方「📱 支付宝扫码」/「💬 微信扫码」），底部「⤢ 放大」+「关闭」；放大按钮切 dlg.state("zoomed") 全屏/还原 geometry；码图走 `_resource_path()` 读 `assets/alipay.jpg`/`wechatpay.jpg`，打包 `--add-data "assets;assets"` |
+| **关于页 / 赞助弹窗** | 按钮「☕ 赞助作者」放关于页底部版权信息上方，secondary 浅底深字（bg=#f1f5f9, bd=1, padx=16 pady=6, hover #e2e8f0）；点击弹 Toplevel 模态（1060×880，minsize 720×560，resizable，屏幕居中）：顶部 ☕ 36pt 橙色 + 主/副文案居中，中间两列等宽码图（480×480 LANCZOS thumbnail，白底 bd=2，下方「📱 支付宝扫码」/「💬 微信扫码」），底部「⤢ 放大」+「关闭」；放大按钮切 dlg.state("zoomed") 全屏/还原 geometry；码图走 `_resource_path()` 读项目 `assets/alipay.jpg`/`wechatpay.jpg`（派活时从技能包 `assets/money_code/` 复制），打包 `--add-data "assets;assets"` |
 
 ---
 

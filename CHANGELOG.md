@@ -3,6 +3,19 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.10] — 2026-10-12
+
+深度审计修复（静态审计，非 kimi-k3-1 派活——WorkBuddy 未真正执行）。
+
+### Fixed
+
+- 码图路径说明缺失：SKILL.md / methodology §5.26 / UI_LAYOUT_SPEC §五 三处补充
+  "派活时把技能包 assets/money_code/ 复制进项目 assets/"，避免 WorkBuddy 运行时找不到码图。
+
+### Added
+
+- AUDIT_REPORT.md：审计报告（BUG 清单 + 已检查无问题项 + 建议关注）
+
 ## [1.5.9] — 2026-10-12
 
 新增文本排版规范（避免孤行/换行错误）——代码产出 GUI 软件最高频缺陷。
