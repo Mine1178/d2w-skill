@@ -3,6 +3,15 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.5] — 2026-10-12
+
+修正收款码源文件路径（用户移动了码图位置）。
+
+### Changed
+
+- 收款码源文件路径：`D:\Desktop\SD\13.Rename\Money_code` → `D:\Desktop\SD\15.DW2_skill\Money_code`
+  （alipay.jpg / wechatpay.jpg 同步迁移）。SKILL.md / methodology §5.26 / UI_LAYOUT_SPEC §五 三处引用同步更新。
+
 ## [1.5.4] — 2026-10-12
 
 GUI 项目硬约束：关于页赞助按钮（作者署名与答谢固定位）。
@@ -13,7 +22,7 @@ GUI 项目硬约束：关于页赞助按钮（作者署名与答谢固定位）�
   与五级按钮同规格不违和；点击弹模态窗，标题"请作者喝杯咖啡"，正文
   "如果你喜欢这个工具，可以请作者喝杯咖啡，感谢赞助"，下方左右并列支付宝+微信收款码，
   窗口大小刚好包络两张码图（约 420×380，不可缩放）。
-- 码图源文件 D:\Desktop\SD\13.Rename\Money_code\{alipay,wechatpay}.jpg 必须复制进项目 ssets/，
+- 码图源文件 D:\Desktop\SD\15.DW2_skill\Money_code\{alipay,wechatpay}.jpg 必须复制进项目 ssets/，
   代码用相对路径读取（禁止硬编码绝对路径）；PyInstaller 走 --add-data "assets;assets" + sys._MEIPASS。
 - CHECKLIST 新增 **L10**（关于页赞助按钮）；UI_LAYOUT_SPEC §五组件表/§七验收/§八自检三处同步；
   methodology 新增 **§5.26**（规格 + 审核硬项）。
