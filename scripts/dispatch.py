@@ -451,6 +451,7 @@ def auto_review(cwd):
         diff = git_run(cwd, ["show", "--stat", "--oneline", "HEAD"])
     else:
         diff = git_run(cwd, ["diff", "HEAD~1", "--stat"])
+    detail_line = f"- 语法错误详情：\n```\n{comp_detail}```" if comp_detail else ""
     doc = f"""# review_round{n} — 自动审核草稿（{os.path.basename(cwd)}）
 
 > 本文件由 dispatch.py --auto-review 自动生成，供审核方（豆包/WorkBuddy）填写判断后正式生效。
