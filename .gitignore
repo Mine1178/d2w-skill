@@ -1,0 +1,7 @@
+# 运行期产物（本 Skill 是工具包，不该把使用状态/缓存带进包内）
+.cache/
+__pycache__/
+*.pyc
+*.log
+serve.pid
+wb_token.txt
