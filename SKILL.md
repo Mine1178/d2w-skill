@@ -258,7 +258,7 @@ python scripts/dispatch.py --smoke --cwd <测试项目路径>
 ```
 自动完成：环境检查（token/CLI/serve）→ 派最小任务（建 smoke_test.txt + commit）→ 验证产物文件与 commit 真实落盘。退出码 0=PASS，1=FAIL。
 
-**手动三步（等价）**：
+**手动四步（等价）**：
 1. `python scripts/dispatch.py --status` → 应打印 `token: 有效`、`CLI: <路径>`（serve 未运行也正常，派活时会自动拉起）
 2. 派一个最小任务（建一个文件 + commit；建议带 `--auto-review` 验证审核草稿生成）
 3. 验收：产物文件与 `git log` 的 commit 都真实存在；`inbox/review_roundN.md` 草稿生成 → 闭环可用

@@ -32,7 +32,7 @@
 ## 建议关注（未修复）
 
 - kimi-k3-1 模型派活后 SSE 未返回文本（runId=ca89899c），serve 日志无处理记录，疑似模型未真正执行。建议下次派活前先 `python dispatch.py --smoke` 验证环境。
-- dispatch.py 帮助文本里 `--smoke` 描述与 SKILL.md 一致，但未在 README.md 里列出命令表（README 是面向 GitHub 用户的门面，建议后续补一个"常用命令"小节）。
+- dispatch.py 帮助文本里 `--smoke` 描述与 SKILL.md 一致，但已在 README.md 常用命令表列出（v1.5.11 完成）（README 是面向 GitHub 用户的门面，建议后续补一个"常用命令"小节）。
 
 ## 验证方式
 

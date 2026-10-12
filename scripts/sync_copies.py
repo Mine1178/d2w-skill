@@ -12,7 +12,7 @@ sync_copies.py — 同步 d2w 技能到宿主注册的旧副本（do2wo / doubao
 
 前置：d2w 为唯一权威版本；修改技能后跑一次本脚本即可三入口一致。
 """
-import argparse, os, re, shutil, sys
+import argparse, os, re, shutil, sys, time
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SKILL_DIR = os.path.dirname(SCRIPT_DIR)
@@ -60,8 +60,13 @@ def sync(apply):
                 diff.append(f"  大小不同: {rel}")
         if diff:
             if apply:
-                shutil.rmtree(dst)
+                bak = dst + ".bak_" + time.strftime("%Y%m%d_%H%M%S")
+                shutil.move(dst, bak)
                 shutil.copytree(SRC, dst, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+                try:
+                    shutil.rmtree(bak)
+                except Exception:
+                    pass
                 # 还原 frontmatter name
                 md = os.path.join(dst, "SKILL.md")
                 txt = open(md, encoding="utf-8").read()

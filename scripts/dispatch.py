@@ -69,6 +69,8 @@ DANGER_PATTERNS = [
     (r"\b(shutdown\b|restart\s+-s|Stop-Computer|Restart-Computer)", "关机/重启命令"),
     (r"(reg\s+delete|regedit\s+/s|Remove-Item\s+.*(HKLM|HKCU))", "注册表删除"),
     (r"(\bdel\s+/[sqf]\s+[A-Za-z]:\\|rm\s+-rf\s+[A-Za-z]:\\)", "盘符级删除"),
+    (r"(删除\s*(所有|全部)?\s*(文件|目录|文件夹)|格式化\s*[A-Za-z]\s*盘|清空\s*(磁盘|注册表)|关机)",
+     "中文破坏性指令"),
 ]
 DANGER_ALLOW = False  # 由 --danger-allow 打开
 
@@ -102,7 +104,7 @@ def _drives():
     import string
     out = []
     for ch in string.ascii_uppercase:
-        p = f"{ch}:\\"
+        p = ch + ":\\"
         try:
             if os.path.exists(p):
                 out.append(ch)
@@ -263,6 +265,15 @@ def port_busy():
     except Exception:
         return False
 
+def reconfigure(cwd):
+    """--cwd 指定后重算 PROJECT/CACHE_DIR/PID_FILE/LOG_FILE/RUNS_FILE 路径。"""
+    global PROJECT, CACHE_DIR, TOKEN_CACHE, PID_FILE, LOG_FILE, RUNS_FILE
+    PROJECT = os.path.abspath(cwd)
+    CACHE_DIR = os.environ.get("WB_CACHE", os.path.join(PROJECT, ".cache"))
+    TOKEN_CACHE = os.path.join(CACHE_DIR, "wb_token.txt")
+    PID_FILE = os.path.join(CACHE_DIR, f"serve.pid_{PORT}")
+    LOG_FILE = os.path.join(CACHE_DIR, f"serve.log_{PORT}")
+    RUNS_FILE = os.path.join(CACHE_DIR, "runs.json")
 def ensure_server(tok):
     if port_busy():
         return True
@@ -315,23 +326,59 @@ def stop_server():
     else:
         print("没有记录到 serve 进程")
 
+def _pids_on_port(port):
+    """按端口查 LISTENING 的 PID（回退查杀孤儿 serve）。"""
+    try:
+        out = subprocess.run(["netstat", "-ano"], capture_output=True, text=True, timeout=10).stdout
+        return {m.group(1) for m in re.finditer(rf":{port}\s+.*LISTENING\s+(\d+)", out)}
+    except Exception:
+        return set()
+
+def _is_node_pid(pid):
+    """校验 pid 对应的进程是不是 node.exe（防误杀无关进程）。"""
+    try:
+        out = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                             capture_output=True, text=True, timeout=5).stdout.strip()
+        return "node.exe" in out.lower()
+    except Exception:
+        return False
 def stop_all_servers():
-    """清理缓存目录下所有端口的 serve（含崩溃后残留的 pid 文件）。"""
+    """清理缓存目录下所有端口的 serve（含崩溃后残留的 pid 文件 + 端口回退查杀）。"""
+    killed = set()
+    # 1. 按 pid 文件杀
     files = _pid_files()
-    if not files:
-        print("没有找到任何 serve.pid_* 记录")
-        return
     for f in files:
         try:
             pid = int(open(f).read().strip())
         except Exception:
             continue
+        if pid in killed:
+            continue
+        if not _is_node_pid(pid):
+            print(f"跳过 pid {pid}（非 node.exe，防误杀）")
+            continue
         try:
             subprocess.run(["taskkill", "/PID", str(pid), "/F"], capture_output=True)
-            print(f"已停止 {os.path.basename(f)} -> pid {pid}")
+            killed.add(pid)
+            print(f"已停止 pid 文件 {os.path.basename(f)} -> pid {pid}")
         except Exception:
-            print(f"停止 {os.path.basename(f)} 失败")
-    print("清理完成（残留 pid 文件保留，下次启动自动复用）")
+            print(f"停止 pid {pid} 失败")
+    # 2. 端口回退查杀（孤儿 serve 没 pid 文件但端口在监听）
+    for pid in _pids_on_port(PORT):
+        if pid in killed:
+            continue
+        if not _is_node_pid(pid):
+            continue
+        try:
+            subprocess.run(["taskkill", "/PID", pid, "/F"], capture_output=True)
+            killed.add(pid)
+            print(f"已停止端口孤儿进程 -> pid {pid}")
+        except Exception:
+            print(f"停止端口孤儿 pid {pid} 失败")
+    if not killed:
+        print("没有找到需要清理的 serve 进程")
+    else:
+        print(f"清理完成，共停止 {len(killed)} 个进程")
 
 # ---------- HTTP ----------
 def _req(path, method="GET", data=None, timeout=10):
@@ -451,7 +498,7 @@ def auto_review(cwd):
         diff = git_run(cwd, ["show", "--stat", "--oneline", "HEAD"])
     else:
         diff = git_run(cwd, ["diff", "HEAD~1", "--stat"])
-    detail_line = f"- 语法错误详情：\n```\n{comp_detail}```" if comp_detail else ""
+    detail_block = ("- 语法错误详情：\n```\n" + str(comp_detail) + "\n```") if comp_detail else ""
     doc = f"""# review_round{n} — 自动审核草稿（{os.path.basename(cwd)}）
 
 > 本文件由 dispatch.py --auto-review 自动生成，供审核方（豆包/WorkBuddy）填写判断后正式生效。
@@ -651,6 +698,7 @@ if __name__ == "__main__":
     ap.add_argument("--status", action="store_true", help="查看状态")
     ap.add_argument("--smoke", action="store_true", help="一条命令跑冒烟自检（环境→派最小任务→验证 commit）")
     args = ap.parse_args()
+    reconfigure(args.cwd)
     DANGER_ALLOW = args.danger_allow
     if args.stop:
         stop_server()
