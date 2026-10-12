@@ -127,7 +127,7 @@
 | **按钮五级** | 扁平无边框（bd=0, cursor="hand2"）：primary 橙底白字（主动作）/ secondary 浅底深字（次动作）/ info 蓝底白字 / success 绿底白字 / danger 红底白字；内边距 padx=12 pady=4；按钮组水平排列间距 8px |
 | **空状态** | 无数据时显示灰色引导文案（如「暂无规则——点击新增规则添加第一条」），不显示空白表格 |
 | **弹窗/模态** | transient + lift + grab_set；resizable(False)；居中于主窗；内边距 padx=16；长文本 wraplength 自适应 |
-| **关于页 / 赞助按钮** | 关于页底部放一个「☕ 赞助作者」按钮（secondary 浅底深字，与五级按钮同规格，不突兀）；点击弹模态窗：标题"请作者喝杯咖啡"，副标题"如果你喜欢这个工具，可以请作者喝杯咖啡，感谢赞助"，下方左右并列支付宝+微信收款码图片（等大、居中），窗口大小刚好包络两张码图（约 420×380，按码图实际尺寸微调），不可缩放；码图从项目 `assets/` 或打包资源读取（不硬编码绝对路径），码图已随技能包分发在 `assets/money_code/{alipay,wechatpay}.jpg`（派活时直接复制进项目 `assets/`） |
+| **关于页 / 赞助弹窗** | 按钮「☕ 赞助作者」放关于页底部版权信息上方，secondary 浅底深字（bg=#f1f5f9, bd=1, padx=16 pady=6, hover #e2e8f0）；点击弹 Toplevel 模态（1060×880，minsize 720×560，resizable，屏幕居中）：顶部 ☕ 36pt 橙色 + 主/副文案居中，中间两列等宽码图（480×480 LANCZOS thumbnail，白底 bd=2，下方「📱 支付宝扫码」/「💬 微信扫码」），底部「⤢ 放大」+「关闭」；放大按钮切 dlg.state("zoomed") 全屏/还原 geometry；码图走 `_resource_path()` 读 `assets/alipay.jpg`/`wechatpay.jpg`，打包 `--add-data "assets;assets"` |
 
 ---
 

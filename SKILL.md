@@ -95,7 +95,12 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
 - **美化**：配色协调有层次（深色导航 + 浅色内容 + 橙/蓝/绿/红语义强调色）、圆角、留白适度
 - **按钮整齐划一**：同尺寸、同间距、对齐网格，五级语义底色（primary/info/success/danger/secondary），有 hover/按下反馈
 - **字体显示完全无遮挡**：微软雅黑层级（20/12/10/9pt），文字不截断、不重叠，长文本自动换行或自适应，字号有层级
-- **关于页赞助按钮（v1.5.4 起必带）**：关于页底部放「☕ 赞助作者」按钮（secondary 浅底深字，与五级按钮同规格不违和）；点击弹模态窗，文案"如果你喜欢这个工具，可以请作者喝杯咖啡，感谢赞助"，下方左右并列支付宝+微信收款码，窗口大小刚好包络两张码图（约 420×380 按码图微调、不可缩放）；码图从项目资源读取不硬编码绝对路径，码图已随技能包分发在 `assets/money_code/{alipay,wechatpay}.jpg`（派活时直接复制进项目 `assets/`） 需打包进 `assets/`
+- **关于页赞助弹窗（v1.5.4 起必带，v1.5.8 细化）**：
+  - 按钮：关于页底部版权信息上方，文案「☕ 赞助作者」，secondary 浅底深字（bg=#f1f5f9, fg=正文色, relief=SOLID, bd=1, padx=16, pady=6, cursor=hand2, hover activebg=#e2e8f0）
+  - 弹窗：Toplevel 模态，默认 1060×880，minsize 720×560，resizable(True,True)，屏幕居中（不跟随按钮），transient+grab_set
+  - 内部：顶部 ☕ 36pt 橙色 → 主文案"如果你喜欢这个工具"（section+4 加粗居中）→ 副文案"可以请作者喝杯咖啡，感谢赞助"（body+2 灰）→ 中间码图区 expand=True fill=BOTH（两列等宽 grid，480×480 thumbnail LANCZOS 白底 bd=2，下方「📱 支付宝扫码」/「💬 微信扫码」）→ 底部「⤢ 放大」+「关闭」并排居中
+  - 一键放大：点「⤢ 放大」保存 geometry → `dlg.state("zoomed")` 全屏 → 按钮变「🗗 还原」；再点恢复 geometry；闭包存 `state={"zoomed":False,"normal_geom":...}`
+  - 码图路径：`assets/alipay.jpg` / `assets/wechatpay.jpg`，用 `_resource_path()`（PyInstaller `_MEIPASS` 兼容），打包 `--add-data "<项目根>/assets;assets"`
 - **验收方式**：实际运行 + 截图目检逐项过（布局/遮挡/对齐/DPI），发现"布局错乱/文字截断/按钮不对齐"按 P0/P1 报
 - CHECKLIST 用 L 组（界面质量 GUI 必检，L1~L10 含布局统一与赞助按钮）逐条打勾
 

@@ -428,19 +428,52 @@ inbox/tasks/001_<简述>.md     # NNN 三位序号，递增
 - **非 GUI 项目（CLI/后台工具）界面维记 N/A**，总分分母减 5
 - **收敛线 = 实际评维数 × 4**（即平均 4 分）；总分低于收敛线但无 P0 → review 备注列改进方向（不算阻塞）
 - 评分必须有"依据"证据（跑了什么/看到什么），不能空手打分
-### 5.26 关于页赞助按钮（1.5.4 新增，GUI 项目必带）
+### 5.26 关于页赞助弹窗（1.5.4 新增，1.5.8 细化）
 
-凡是用 D2W 生产的 GUI 桌面软件，**关于页必须有赞助入口**——这是作者署名与答谢的固定位，不做"可选项"。
+凡是用 D2W 生产的 GUI 桌面软件，**关于页必须有赞助入口**——作者署名与答谢固定位，不是可选项。
 
-**规格**（派活文本直接照抄）：
-- 位置：关于页底部，与版本号/版权信息同区域，不抢主功能视觉
-- 按钮：「☕ 赞助作者」，secondary 浅底深字（与五级按钮同规格，bd=0、cursor=hand2、padx=12 pady=4），不突兀
-- 点击行为：弹模态窗（transient + grab_set + 居中 + 不可缩放），标题"请作者喝杯咖啡"，正文一行："如果你喜欢这个工具，可以请作者喝杯咖啡，感谢赞助"
-- 收款码：窗口内左右并列支付宝 + 微信两张码图（等大居中，间距 16px），窗口大小刚好包络两张码图（约 420×380，按码图实际尺寸微调）
-- 资源：码图已随技能包分发在 `assets/money_code/{alipay,wechatpay}.jpg`（派活时直接复制进项目 `assets/` 或 `resources/`），代码用 `os.path` 相对路径读取，**禁止硬编码绝对路径**（否则打包后/换机就裂图）
-- 打包注意：PyInstaller 用 `--add-data "assets;assets"`，运行时走 `sys._MEIPASS` 资源路径
+**按钮规格**：
+- 位置：关于页底部版权信息上方
+- 文案：「☕ 赞助作者」
+- 样式：secondary 浅底深字（bg=#f1f5f9, fg=正文色, relief=SOLID, bd=1, padx=16, pady=6, cursor=hand2）
+- hover：activebackground=#e2e8f0
 
-**审核硬项**（CHECKLIST L10）：按钮风格违和（primary 大红大绿）、码图被裁剪/拉伸、窗口过大留大片白、硬编码绝对路径、码图没打进包——任一问题按 P1 报。
+**弹窗规格（Toplevel 模态）**：
+- 默认尺寸 1060×880，minsize 720×560，resizable(True,True)
+- 位置：屏幕居中（按 winfo_screenwidth/height 算 x/y，不跟随按钮）
+- 模态：transient(parent) + grab_set()
+- 标题：「赞助作者」
+
+**弹窗内部布局（从上到下）**：
+1. 顶部 ☕ 36pt，橙色 C_ACCENT，pady 上边距
+2. 主文案"如果你喜欢这个工具"（section+4pt 加粗，居中）
+3. 副文案"可以请作者喝杯咖啡，感谢赞助"（body+2pt 灰色）
+4. 中间码图区（expand=True, fill=BOTH）：两张码图 grid 两列等宽，占满剩余空间
+5. 底部按钮行：「⤢ 放大」+「关闭」并排居中
+
+**码图规格**：
+- 尺寸 480×480 thumbnail（Image.LANCZOS 高质量，按原比例不拉伸）
+- 白底 #ffffff，边框 bd=2
+- 左右两列：grid_columnconfigure(weight=1) 等宽居中，padx=S_LG
+- 下方标签：「📱 支付宝扫码」/「💬 微信扫码」（body+2pt 加粗）
+- 找不到码图时显示灰色占位框 [支付宝 待添加]
+
+**一键放大/还原**：
+- 底部左侧按钮默认「⤢ 放大」
+- 点击：保存当前 geometry → `dlg.state("zoomed")` 全屏 → 按钮变「🗗 还原」
+- 再点：恢复保存的 geometry → 按钮变回「⤢ 放大」
+- 闭包存 `state = {"zoomed": False, "normal_geom": ...}`
+
+**码图路径（PyInstaller 兼容）**：
+```python
+def _resource_path(rel: str) -> Path:
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / rel
+    return Path(__file__).resolve().parents[N] / rel  # N=从 about.py 上溯到项目根的级数
+```
+码图放 `assets/alipay.jpg` / `assets/wechatpay.jpg`；打包 `--add-data "<项目根>/assets;assets"`。
+
+**审核硬项（CHECKLIST L10）**：按钮风格违和、弹窗尺寸/居中不对、码图裁剪拉伸、放大/还原不工作、硬编码绝对路径、码图没打进包——任一 P1。
 
 ## 6. 收尾与沉淀
 

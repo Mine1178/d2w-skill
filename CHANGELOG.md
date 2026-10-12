@@ -3,6 +3,24 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.8] — 2026-10-12
+
+关于页赞助弹窗规格细化（1060×880 可缩放 + 480px 双码图 + 一键放大全屏）。
+
+### Changed
+
+- 弹窗尺寸：420×380 不可缩放 → **1060×880，minsize 720×560，resizable**，屏幕居中不跟随按钮
+- 按钮样式量化：bg=#f1f5f9, relief=SOLID, bd=1, padx=16 pady=6, hover #e2e8f0
+- 码图：480×480 LANCZOS thumbnail，白底 bd=2，两列等宽 grid，下方「📱 支付宝扫码」/「💬 微信扫码」标签
+- 新增「⤢ 放大 / 🗗 还原」按钮：`dlg.state("zoomed")` 全屏，闭包存 normal_geom
+- 码图路径函数 `_resource_path()` 明确（PyInstaller `_MEIPASS` 兼容），打包 `--add-data "assets;assets"`
+- CHECKLIST L10 验收标准同步更新；SKILL.md / UI_LAYOUT_SPEC §五 / methodology §5.26 三处联动
+
+
+## [1.5.7] — 2026-10-12
+
+开源准备：新增 README.md（含末尾「☕ 感谢赞助」板块，并列支付宝/微信码图）+ 修复 .gitignore 乱码注释。
+
 ## [1.5.6] — 2026-10-12
 
 收款码图收编为技能包正式资产。
