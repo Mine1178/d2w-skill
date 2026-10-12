@@ -405,7 +405,12 @@ def auto_review(cwd):
     existing = [f for f in os.listdir(inbox) if f.startswith("review_round") and f.endswith(".md")] if os.path.isdir(inbox) else []
     n = len(existing) + 1
     log = git_run(cwd, ["log", "--oneline", "-3"])
-    diff = git_run(cwd, ["diff", "HEAD~1", "--stat"])
+    # 首次 commit（无 HEAD~1）时用 git show 代替 git diff，避免 ambiguous argument 报错
+    cnt = git_run(cwd, ["rev-list", "--count", "HEAD"])
+    if cnt.strip().isdigit() and int(cnt.strip()) <= 1:
+        diff = git_run(cwd, ["show", "--stat", "--oneline", "HEAD"])
+    else:
+        diff = git_run(cwd, ["diff", "HEAD~1", "--stat"])
     doc = f"""# review_round{n} — 自动审核草稿（{os.path.basename(cwd)}）
 
 > 本文件由 dispatch.py --auto-review 自动生成，供审核方（豆包/WorkBuddy）填写判断后正式生效。
@@ -421,7 +426,7 @@ def auto_review(cwd):
 ```
 {log}
 ```
-- 变更统计（HEAD~1..HEAD）：
+- 变更统计（最近一次提交）：
 ```
 {diff}
 ```

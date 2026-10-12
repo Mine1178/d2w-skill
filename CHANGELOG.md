@@ -3,6 +3,52 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.0] — 2026-10-12
+
+三大方向落地（安全白名单 / 派活-审核管道化 / 初始化向导+技能 git 化）+ P1/P2 全补齐。
+
+### Added（三大方向）
+
+- **命令白名单 / 安全边界（默认启用）**：`dispatch.py` 派活前对任务文本做危险命令拦截
+  （删除/格式化/关机/注册表/盘符级删除等正则模式），命中即拒绝派活（exit 2）；
+  `--danger-allow` 显式放行安全任务（methodology §5.21、troubleshooting §21）
+- **派活→审核管道化**：`dispatch.py --auto-review`——SSE 结束后若出现新 commit，
+  自动生成 `inbox/review_roundN.md` 审核草稿（含变更统计 + 全项目 py_compile 结果），
+  AI 只填判断，不再从 0 起步（methodology §5.22）
+- **初始化向导**：新脚本 `init_project.py`——一条命令完成 建目录/git init/仓库级身份/
+  .gitignore/inbox 信箱/复制派活桥/复制模板/（--prd 时生成 CHECKLIST 草稿）（SKILL.md §一）
+- **技能自身 git 化**：`d2w/` 目录纳入 git 管理（首次 commit `5eaa1ae`），可 diff/回滚/追溯；
+  副本同步脚本 `sync_copies.py`（d2w → do2wo/collab，防宿主旧快照复活）（methodology §5.24）
+
+### Added（P1/P2 补齐）
+
+- **CLI 路径自动探测**：默认路径缺失时按 WB_CLI_PATH → 常见安装目录 glob → 进程推导 依次尝试，
+  `--status` 直接显示解析到的 CLI 路径（methodology §5.23、setup §1.2、troubleshooting §20）
+- **--stop-all 孤儿清理**：一次清理缓存目录下所有端口 serve（serve.pid_<PORT> 逐个 kill）
+- **serve.log 日志轮转**：超 5MB 自动备份 .old，不再无限增长
+- **--queue 批量结果汇总**：结束打印成功/失败 + 失败序号清单
+- **评分锚定标准**：review_round 模板内置 1/3/5 分锚定表；非 GUI 项目界面维 N/A 并从分母剔除；
+  收敛线 = 实际评维数 × 4（methodology §5.25）
+- **selftest 样例模板**：新增 `assets/templates/selftest.example.md`（轻量断言 + pytest 两种形态）
+- **CHECKLIST 按 PRD 生成**：新脚本 `gen_checklist.py`——提取 PRD 功能点生成 CHECKLIST.md 草稿，
+  交互类自动标"人工"（init_project --prd 时自动调用）
+
+### Changed
+
+- `SKILL.md`：§一 初始化改用 init_project.py；派活段加 --auto-review/--danger-allow/--stop-all/
+  CLI 自动探测/安全边界；审核段评分口径更新（豁免+收敛线）；资源索引与冒烟自检同步
+- `references/methodology.md`：§1.2/1.4 向导化；§3.2/3.5 评分口径同步；新增 §5.21-5.25
+- `references/setup.md`：§1.2 自动探测、§3 输出示例、§4.1 日志轮转、§6 WB_CACHE、§7 危险命令拦截
+- `references/troubleshooting.md`：新增 §20（CLI 找不到）、§21（危险命令误伤）、§22（孤儿 serve）、§23（副本旧快照）
+
+### Verified
+
+- 6 个脚本 py_compile 全过；quick_validate = Skill is valid!
+- d2w 技能包 git 化完成（commit 5eaa1ae）
+- 实测见本轮记录：init_project 生成测试项目、gen_checklist 从 PRD 生成草稿、危险命令拦截拒绝、
+  --status 显示 CLI、--stop-all、副本清理确认（do2wo/collab 已不存在，仅剩 d2w）
+
+
 ## [1.4.0] — 2026-10-12
 
 双 AI 协作闭环增强：**run 状态跟踪 / 批量派活 / 多项目并发 / 5 维评分 / 双审交叉审核 / 模块自测强制**（对应完善建议 1-6）。

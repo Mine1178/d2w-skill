@@ -32,7 +32,14 @@ Get-ChildItem "E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\
 # 找不到时全盘搜：Get-ChildItem -Path C:\,E:\ -Recurse -Filter codebuddy-headless.js -ErrorAction SilentlyContinue 2>$null
 ```
 
-### 1.2 项目初始化
+### 1.2 项目初始化（推荐一条命令）
+```bash
+python scripts/init_project.py D:\path\新项目 --with-templates
+# 一次完成：建目录 + git init + 仓库级身份 + .gitignore + inbox/tasks+results + 复制派活桥 + 复制模板
+# 已有 PRD 时直接生成 CHECKLIST 草稿：
+python scripts/init_project.py D:\path\新项目 --with-templates --prd D:\path\PRD.md
+```
+手工方式（等价，脚本不可用时）：
 1. **建 git 仓库**：`git init`（必须——通信协议依赖 commit）
 2. **配 git 身份**（仓库级即可，避免全局污染）：
    ```
@@ -40,7 +47,7 @@ Get-ChildItem "E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\
    git config user.email "agent@local"
    ```
 3. **写 .gitignore**：至少忽略 `.cache/`、`_*.out`、`__pycache__/`、测试临时产物
-4. **建 inbox 目录**：`inbox/`（通信信箱，见 §2.2）
+4. **建 inbox 目录**：`inbox/tasks`、`inbox/results`（通信信箱，见 §2.2）
 
 ### 1.3 需求文档（双方共同基线）
 - **PRD.md**：产品需求（功能、边界、优先级、交互）。乙方按此实现，甲方按此验收
@@ -48,9 +55,9 @@ Get-ChildItem "E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\
 - 这两份文件是**双方契约**：乙方照着做，甲方照着审。写好后再开工
 
 ### 1.4 部署派活桥
-- 复制 `scripts/dispatch.py` 到项目根目录
+- `init_project.py` 已自动复制 `scripts/dispatch.py`、`scripts/poll_tasks.py` 到项目根（或手工复制）
 - 首次派活自动完成：提 token → 起 serve → 派任务 → 读结果
-- 换机/换项目时用环境变量覆盖默认路径（见脚本头注释）
+- 换机/换项目时用环境变量覆盖默认路径（见脚本头注释）；CLI 路径缺失时脚本**自动探测**（§5.23）
 
 ### 1.5 定时审核任务（可选，推荐）
 创建每小时定时任务，内容模板见 §4.4。注意：定时任务创建有最短间隔限制（1 小时），且需按定时任务 Skill 规范创建。
@@ -126,13 +133,13 @@ python dispatch.py "在 <cwd> 目录：<具体任务>。要求：1) <功能点>�
    - **P0（阻塞）**：功能错误、崩溃、数据损坏、需求核心不满足——必须改
    - **P1（该改）**：明显缺陷、体验问题、约定违反——应该改
    - **P2（建议）**：优化项、风格、边界增强——可选
-5. **5 维评分**（review_round 模板已内置评分表，每题 1-5 分，依据写一句话证据）：
+5. **5 维评分**（review_round 模板已内置评分表与锚定标准，每题 1-5 分，依据写一句话证据；**非 GUI 项目界面维记 N/A 并从分母剔除；收敛线 = 实际评维数 × 4**，详见 §5.25）：
    - **正确性**：功能符合 PRD，无错误结果
    - **可维护性**：模块化、命名、注释、无重复代码
    - **性能**：响应速度、资源占用、高频场景不卡
    - **安全**：剪贴板/数据/路径/异常不外泄不破坏（对应 CHECKLIST J/K 组）
    - **界面**（GUI 类）：布局、美化、按钮统一、字体无遮挡、DPI（对应 L 组）
-   - 总分 **<20/25 = 未达收敛线**，即使无 P0 也应提示改进方向
+   - 总分低于收敛线（平均不足 4 分）→ 即使无 P0 也应提示改进方向
 6. 写 review_roundN.md：总体结论 + **评分表** + 逐条问题（现象/根因/修改方向）+ 验收标准 + STATUS
 
 ### 3.3 模式 A 派修（豆包）
@@ -161,7 +168,7 @@ inbox/tasks/001_<简述>.md     # NNN 三位序号，递增
 ### 3.5 收敛判断
 - 本轮无 P0 → review 末尾写 `STATUS: NO_P0`
 - **连续两轮 NO_P0 → 宣布收敛**，交付用户过目
-- **加分条件（建议）**：收敛轮总分 ≥20/25；总分 <20 且无 P0 → 在 review 备注里列出改进方向（不算阻塞，但建议修到 20+）
+- **加分条件（建议）**：收敛轮总分 ≥ 收敛线（实际评维数 × 4）；总分低于收敛线且无 P0 → 在 review 备注里列出改进方向（不算阻塞，但建议修到线以上，口径见 §5.25）
 - 有 P0 → 继续派修循环（每轮 N+1）
 
 ### 3.6 双审 / 交叉审核（关键模块必做，普通模块可选）
@@ -354,6 +361,71 @@ inbox/tasks/001_<简述>.md     # NNN 三位序号，递增
 - **--list-runs [--limit N] [--check]**：查派活历史（时间/cwd/模型/摘要）；`--check` 逐个查 run 活跃状态（active=执行中 / completed=已完成 / http_N=查询失败）
 - **用途**：跑完一批任务后 `--list-runs --check` 确认全部 completed；发现 active 残留（SSE 断了但 agent 还在跑）→ 等它自然结束或按 §17 续跑
 - **记录位置**：`.cache/runs.json`（最多留 200 条，已 gitignore）
+- **批量结果汇总（1.5.0）**：`--queue` 结束打印"成功/失败 + 失败序号清单"，不再只靠人肉数
+
+### 5.21 命令白名单 / 安全边界（1.5.0 新增，默认启用）
+
+**背景**：CLI 的 `--permission-mode auto` 是必要开关（否则 commit 卡权限确认），意味着乙方理论上能执行任意命令——业务层安全必须由派活桥把关。
+
+**规则**：
+1. **危险命令拦截（默认）**：任务文本匹配危险模式（`rm -rf`/`rmdir /s`/`Remove-Item -Recurse`/`format`/`diskpart`/`shutdown`/`reg delete`/盘符级删除等）→ `dispatch.py` **拒绝派活**（exit 2）
+2. **显式放行**：确属安全任务（如测试代码里含 `shutil.rmtree` 字样被误伤），加 `--danger-allow`
+3. **白名单思维**：任务文本四/五要素就是"白名单"——只允许乙方做任务范围内的事；在派活文本里显式写"不要执行 <xx> 类命令"
+4. **审核兜底**：review 时抽查产出物有无越权操作痕迹（读写项目外路径、访问网络、调用外部命令）
+5. **服务端策略不变**：127.0.0.1 绑定 + 任务文本可信假设仍然成立；个人项目自用，别把本项目脚本外发给不受信方
+
+**误伤处理**：危险模式是正则，可能误伤"讨论删除逻辑"的代码任务（如写一个"安全删除工具"）。误伤时：要么 `--danger-allow`，要么把任务文本改成"实现功能但不要出现实际执行删除的语句"。
+
+### 5.22 派活→审核管道化（1.5.0 新增）
+
+**目标**：派活结束（SSE 完成）即生成审核草稿，缩短"等定时任务"的空窗，让审核从 0 起步变成填判断。
+
+**机制**：
+1. 派活时加 `--auto-review`：SSE 结束后若 git HEAD 出现新 commit → 自动：
+   - `git log --oneline -3` + `git diff HEAD~1 --stat`（变更统计）
+   - 全项目 `.py` 逐个 `py_compile`（排除 .cache/__pycache__/dist/build）
+   - 生成 `inbox/review_roundN.md` 草稿（含以上证据，评分/问题/复审留空待 AI 填）
+2. 审核方拿到草稿：填总体结论 + 5 维评分 + 逐条问题 + STATUS → 更新基线 `last_reviewed_commit.txt` → 派修
+3. `--queue + --auto-review`：每任务完成各生成一份草稿（适合分模块场景，模块级审核）
+
+**与定时任务的关系**：定时审核仍是兜底（用户不在场时也跑）；`--auto-review` 是"人在场时的即时管道"。两者共用同一份 review 模板与基线文件，不冲突。
+
+### 5.23 CLI 路径自动探测与升级适配（1.5.0 新增）
+
+- 默认路径不存在时，`dispatch.py` 自动按顺序尝试：
+  1. `WB_CLI_PATH` 环境变量（最高优先）
+  2. 默认/常见安装目录 glob（Program Files*、D 盘常见位置）
+  3. 从运行中的 WorkBuddy 进程 `ExecutablePath` 推导 CLI 位置
+- 全部失败 → 报错提示（"设 WB_CLI_PATH 或先启动 WorkBuddy 桌面版"），不再静默用错误路径
+- `--status` 直接显示解析到的 CLI 路径，便于核对
+- **升级适配提醒**：CLI 升级后若派活异常，先跑冒烟自检（SKILL.md §九）确认：token 有效 / CLI 可定位 / serve 起得来；版本相关的坑（--auth none 失效等）见 troubleshooting §15
+
+### 5.24 副本同步与技能自身 git 化（1.5.0 新增）
+
+**背景**：豆包宿主会把已注册技能目录"维持存在"（硬删后自动重建旧快照）。2026-10-12 实测：删除 do2wo / doubao-workbuddy-collab 后约 45-90 秒宿主重建，且内容是**旧版**。后经客户端清理，副本已不存在——只剩 `d2w` 一个入口。
+
+**维护规则**：
+1. **d2w 是唯一权威**：所有修改只改 `d2w/`
+2. **若副本复活**（宿主再次注册）：`python scripts/sync_copies.py` 一键把 d2w 全量镜像到副本并还原 frontmatter name；`--check` 先看差异
+3. **技能自身 git 化**：`d2w/` 目录已是 git 仓库（v1.5.0 起），每次迭代先 commit 再交付——可 diff、可回滚、可追溯版本
+4. 迭代流程：改 d2w → py_compile + quick_validate → 实测 → git commit →（如副本存在）sync_copies
+
+### 5.25 评分锚定标准（1.5.0 新增，消除审核口径漂移）
+
+5 维评分各 1-5 分，锚定（review_round.template.md 已内置表格）：
+
+| 维度 | 5 分（完美） | 3 分（可用有改进） | 1 分（不合格） |
+|---|---|---|---|
+| 正确性 | 核心功能全过 + 边界场景也过 | 核心功能过，边界有瑕疵 | 核心功能不过 / 结果错误 |
+| 可维护性 | 模块清晰、命名规范、有注释、零重复 | 基本分层但耦合/命名一般 | 一坨无结构、无注释 |
+| 性能 | 秒级响应、占用低、高频不卡 | 可用但偶卡 / 占用偏高 | 明显卡顿 / 内存泄漏 |
+| 安全 | 剪贴板/数据/路径全防护，异常不崩不泄 | 基本防护但有遗漏 | 有破坏性风险（删数据/泄露路径） |
+| 界面 | 布局/字体/DPI/交互全达标（L 组全勾） | L 组大部分过，个别小瑕疵 | 遮挡/错位/文字截断（即 P0） |
+
+**豁免与收敛线**：
+- **非 GUI 项目（CLI/后台工具）界面维记 N/A**，总分分母减 5
+- **收敛线 = 实际评维数 × 4**（即平均 4 分）；总分低于收敛线但无 P0 → review 备注列改进方向（不算阻塞）
+- 评分必须有"依据"证据（跑了什么/看到什么），不能空手打分
 
 
 ## 6. 收尾与沉淀

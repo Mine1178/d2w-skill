@@ -11,7 +11,10 @@
 ### 1.2 headless CLI 入口（派活桥核心）
 - 典型路径（以实际探测为准）：
   `E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js`
-- 探测命令：
+- **自动探测（v1.5.0 起）**：dispatch.py 在默认路径不存在时按顺序尝试——
+  `WB_CLI_PATH` 环境变量 → 常见安装目录 glob（Program Files* / D 盘）→ 从运行中的 WorkBuddy 进程推导；全部失败才报错提示。
+  `python dispatch.py --status` 会直接显示解析到的 CLI 路径。
+- 手工探测命令：
   ```powershell
   Get-ChildItem "E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist" -Filter "codebuddy-headless.js"
   ```
@@ -38,6 +41,8 @@ python scripts/dispatch.py --status
 ```
 token: 有效
 serve: 运行中（或 未运行——派活时会自动拉起）
+CLI: <解析到的 codebuddy-headless.js 路径>
+默认模型: glm-5.3
 ```
 
 ## 4. serve 服务细节
@@ -52,6 +57,7 @@ node <CLI> --serve --port 51741 --auth none --permission-mode auto
 - `--auth none`：本机绑定，关闭 HTTP 认证（靠 127.0.0.1 兜底）
 - `--permission-mode auto`：**必须有**，否则 git commit 等操作卡权限确认
 - 启动成功的判据：日志出现 `⚠ Authentication is DISABLED.`（不是 `Auth enabled (mode: password)`）
+- **日志轮转（v1.5.0）**：serve.log 超过 5MB 自动备份为 `.old`，不会无限增长
 
 ### 4.1.1 环境代理陷阱
 若本机设了 `HTTP_PROXY`/`HTTPS_PROXY`，Python `urllib` 默认会把 loopback 请求也发给代理 → 502。
@@ -99,9 +105,10 @@ python scripts/extract_jwt.py <PID> --out wb_tokens.txt
 
 通过环境变量覆盖脚本默认值（见 dispatch.py 头注释）：
 ```powershell
-$env:WB_CLI_PATH = "<新机器的 CLI 绝对路径>"
+$env:WB_CLI_PATH = "<新机器的 CLI 绝对路径>"   # 不设也会自动探测
 $env:WB_PORT = "51741"
 $env:WB_PROJECT = "D:\新项目目录"
+$env:WB_CACHE = "D:\新项目目录\.cache"          # 多端口共用 token 时指向同一缓存
 ```
 
 ## 7. 安全边界
@@ -109,6 +116,7 @@ $env:WB_PROJECT = "D:\新项目目录"
 - serve 只绑定 127.0.0.1，不暴露外网
 - token 绝不写进 commit、文档、聊天
 - `--permission-mode auto` 是必要的权限开关，但任务文本要可信
+- **危险命令拦截（v1.5.0 默认启用）**：任务文本含删除/格式化/关机/注册表/盘符级删除等模式 → dispatch.py 拒绝派活（exit 2）；确属安全任务加 `--danger-allow` 放行（详见 methodology §5.21）
 
 ## 8. 模式 B（WorkBuddy → 豆包）的约定
 

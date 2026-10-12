@@ -21,13 +21,19 @@ description: 双 AI 协作开发闭环（豆包 ⇄ WorkBuddy，双向，即 Do-
 ## 一、准备（一次性，两模式共用）
 
 1. **环境验证**：WorkBuddy 桌面版运行并登录；`python scripts/dispatch.py --status` 应打印 `token: 有效`（无效见 references/setup.md §5）
-2. **项目初始化**：
-   - `git init` + 仓库级身份：`git config user.name "workbuddy-agent"` / `git config user.email "agent@local"`（新仓库必做，否则 commit 报错）
-   - `.gitignore` 至少含 `.cache/`、`_*.out`、`__pycache__/`
-   - 建 `inbox/` 及其子目录 `tasks/`、`results/`
-3. **写契约**：用 `assets/templates/PRD.template.md` 写 PRD.md（需求）+ `assets/templates/CHECKLIST.template.md` 写 CHECKLIST.md（逐条可勾验收清单）
-4. **部署**：复制 `scripts/dispatch.py`、`scripts/poll_tasks.py` 到项目根
-5. **（可选）定时任务**：按 `assets/templates/cron_query.template.md` 建每小时 cron（心跳 + 审核/轮询 + 强制汇报）
+2. **项目初始化（推荐一条命令）**：
+   ```bash
+   python scripts/init_project.py D:\path\新项目 --with-templates
+   # 一次完成：建目录 + git init + 仓库级身份 + .gitignore + inbox/tasks+results + 复制派活桥 + 复制模板
+   # 已有 PRD 时直接生成 CHECKLIST 草稿：
+   python scripts/init_project.py D:\path\新项目 --with-templates --prd D:\path\PRD.md
+   ```
+   - 手工方式（等价）：`git init` + `git config user.name "workbuddy-agent"` / `git config user.email "agent@local"`（新仓库必做，否则 commit 报错）+ `.gitignore` 含 `.cache/`、`_*.out`、`__pycache__/` + 建 `inbox/tasks`、`inbox/results` + 复制 `scripts/dispatch.py`、`scripts/poll_tasks.py` 到项目根
+3. **写契约**：用 `assets/templates/PRD.template.md` 写 PRD.md（需求）；CHECKLIST.md 可手工写或按 PRD 自动生成：
+   ```bash
+   python scripts/gen_checklist.py <PRD.md> --out CHECKLIST.md   # 提取功能点生成草稿，再人工增删核对
+   ```
+4. **（可选）定时任务**：按 `assets/templates/cron_query.template.md` 建每小时 cron（心跳 + 审核/轮询 + 强制汇报）
 
 > 细节：references/setup.md（环境与认证）、references/methodology.md（完整方法论与双向规则）
 
@@ -38,12 +44,15 @@ description: 双 AI 协作开发闭环（豆包 ⇄ WorkBuddy，双向，即 Do-
 python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) 完成后 python -m py_compile <文件> 确认语法；3) git commit，提交信息 '<信息>'。不要修改 <禁区>。" --timeout 300
 ```
 **任务文本四要素**：明确 cwd / 做什么 / 验收要求（编译、commit）/ 边界（禁区）。指令越具体产出越好。
-**第五要素（GUI/核心逻辑必带）**：要求乙方**附带 selftest**（关键函数+边界+异常各至少 1 条，写完先跑通再 commit）——审核直接跑，不只看 py_compile。
+**第五要素（GUI/核心逻辑必带）**：要求乙方**附带 selftest**（关键函数+边界+异常各至少 1 条，写完先跑通再 commit）——审核直接跑，不只看 py_compile。样例见 `assets/templates/selftest.example.md`。
+**安全边界（v1.5.0 起默认启用）**：任务文本含危险命令模式（删除/格式化/关机/清注册表/盘符级删除）会被脚本**拒绝派活**；确属安全任务加 `--danger-allow` 显式放行。详见 methodology §5.21。
 - `--debug`：SSE 读不到结果时看原始事件
-- `--status`：查 token 与 serve 状态；`--stop`：停 serve
+- `--status`：查 token / serve / CLI 路径 / 默认模型
+- `--stop`：停当前端口 serve；`--stop-all`：清理缓存下所有端口 serve（孤儿进程）
 - `--list-runs [--limit N] [--check]`：查派活历史与 run 活跃状态（记录在 .cache/runs.json）
-- `--queue tasks.txt`：批量派活（每行一个任务，可带 `[model=xxx]`，`#` 注释）
-- 换机/换项目：环境变量 `WB_CLI_PATH` / `WB_PORT` / `WB_PROJECT` / `WB_CACHE`
+- `--queue tasks.txt`：批量派活（每行一个任务，可带 `[model=xxx]`，`#` 注释）；结束打印成功/失败汇总
+- `--auto-review`：派活结束后自动生成审核草稿 `inbox/review_roundN.md`（自动完成变更统计 + py_compile，AI 只填判断）→ 审核管道化，见 methodology §5.22
+- 换机/换项目：环境变量 `WB_CLI_PATH` / `WB_PORT` / `WB_PROJECT` / `WB_CACHE`；CLI 路径缺失时**自动探测**（进程定位 + 常见安装目录兜底）
 - **多项目并发**：同 serve 多 cwd 已支持；重度并行换端口（`WB_PORT=51742`），serve.pid/log 已按端口隔离，详见 methodology §5.19
 
 **模型选择（默认 glm-5.3，一句话可切换）**：
@@ -93,7 +102,7 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
 1. `git rev-parse HEAD` vs `inbox/last_reviewed_commit.txt` 判断有无新产出
 2. 读所有产出文件 + 对照 CHECKLIST.md 逐条打勾
 3. 跑验证：py_compile、**乙方自带 selftest**、关键路径实测（先区分"环境缺依赖"与"真 bug"）
-4. **5 维评分**（正确性/可维护性/性能/安全/界面，各 1-5 分，模板内置评分表）：总分 **<20/25 视为未达收敛线**，无 P0 但 <20 也在备注列改进方向
+4. **5 维评分**（正确性/可维护性/性能/安全/界面，各 1-5 分；**非 GUI 项目界面维记 N/A 并从分母剔除；收敛线 = 实际评维数 × 4**；锚定标准见 methodology §5.25 / review_round.template.md）
 5. 用 `assets/templates/review_round.template.md` 写 `inbox/review_roundN.md`（N 递增）：
    - 总体结论 + **评分表** + 逐条问题（**现象 / 根因 / 修改方向**）+ 验收标准
    - 分级：**P0** 阻塞必须改 / **P1** 该改 / **P2** 建议
@@ -103,7 +112,7 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
 
 ### 派修与收敛
 - 派修：`python dispatch.py "请阅读 <cwd>/inbox/review_roundN.md 并按意见修改。改完 py_compile + 跑 selftest + git commit + 汇报 hash。"`
-- 收敛：**连续两轮 `STATUS: NO_P0` → 宣布收敛**，告知用户可过目（建议同时总分 ≥20/25）
+- 收敛：**连续两轮 `STATUS: NO_P0` → 宣布收敛**，告知用户可过目（建议同时总分 ≥ 收敛线）
 - 有 P0 → 继续循环（每轮 N+1）
 
 ## 三、模式 B：WorkBuddy 派活 → 豆包
@@ -181,6 +190,9 @@ python dispatch.py "在 <cwd> 目录：用 PyInstaller 打包 <入口.py>，要�
 |---|---|
 | 派活报 **502** / status 假报"运行中" | 环境代理劫持 loopback → 脚本已用空 ProxyHandler 直连；协议见 troubleshooting §14 |
 | 派活报 **401 AUTH_REQUIRED** | 新版 CLI 的 `--auth none` 失效 → 脚本已注入 `CODEBUDDY_GATEWAY_AUTH=none`；见 §15 |
+| 派活被拦"危险命令" | 任务文本含 rm/format/关机/注册表删除等模式 → 默认拒绝；确认安全加 `--danger-allow`；见 methodology §5.21 |
+| CLI 找不到 | 脚本自动探测（进程定位+常见目录）；仍失败设 `WB_CLI_PATH` 或先启动 WorkBuddy 桌面版；见 troubleshooting §20 |
+| serve 孤儿进程/端口残留 | `python dispatch.py --stop-all` 一次清理缓存下所有端口；见 troubleshooting §22 |
 | commit 卡住/无文本输出 | serve 必须 `--permission-mode auto`（dispatch.py 已内置） |
 | commit 报身份缺失 | 仓库级配 user.name/email |
 | token 无效 | 桌面版在运行？删 `.cache/wb_token.txt` 重新提取 |
@@ -197,23 +209,28 @@ python dispatch.py "在 <cwd> 目录：用 PyInstaller 打包 <入口.py>，要�
 ## 八、边界
 
 - **适合**：写代码、改 bug、补测试、审核、重构、提交归档、跑验证、查资料/润色（模式 B）
-- **不适合**：真实 GUI 交互验收（真鼠标划词、听声音）、外部账号/支付/危险命令、产品决策
+- **不适合**：真实 GUI 交互验收（真鼠标划词、听声音）、外部账号/支付/危险命令（默认拦截但 auto 权限仍应慎用）、产品决策
 
 ## 资源索引
 
 ```
 scripts/
-  dispatch.py       模式 A 派活桥（token 提取 + serve + 派任务 + 读结果）
-  poll_tasks.py     模式 B 任务队列轮询（列任务 / 标记已处理 / 撤销标记）
+  dispatch.py       模式 A 派活桥（token 提取 + serve + 派任务 + 读结果 + 模型选择 + 危险命令拦截
+                    + CLI 自动探测 + --queue/--list-runs/--stop-all/--auto-review）
+  poll_tasks.py     模式 B 任务队列轮询（列任务 / 标记已处理 / 撤销标记 / 重置）
+  init_project.py   项目初始化向导（git+身份+.gitignore+inbox+复制脚本+模板，一条命令）
+  gen_checklist.py  按 PRD.md 自动生成 CHECKLIST.md 草稿（提取功能点）
+  sync_copies.py    副本同步（d2w -> do2wo/doubao-workbuddy-collab，防宿主旧快照复活）
   extract_jwt.py    备用：全量 token 扫描
 references/
-  setup.md          环境设置与认证机制（CLI 入口、token、serve、API 格式、鉴权开关）
-  methodology.md    完整方法论（准备清单、协议、流程、红线、双向规则、冒烟自检）
+  setup.md          环境设置与认证机制（CLI 入口、token、serve、API 格式、鉴权开关、模型清单）
+  methodology.md    完整方法论（准备清单、协议、流程、红线、双向规则、安全边界、管道化、评分锚定、冒烟自检）
   troubleshooting.md 真实踩坑记录（含已走过的死路清单）
 assets/templates/
   PRD.template.md         需求文档模板
   CHECKLIST.template.md   验收清单模板（A~Q 组，含界面 L / 打包 M / 安装 N / 手册 O / 测试 P / 交付 Q）
-  review_round.template.md 审核报告模板
+  review_round.template.md 审核报告模板（5 维评分锚定表 + 复审段）
+  selftest.example.md     selftest 样例（轻量断言 + pytest 两种形态，派活第五要素配套）
   task_request.template.md 任务单模板（模式 B）
   task_result.template.md  结果单模板（模式 B）
   cron_query.template.md   定时任务 query 模板（A 审核 / B 轮询）
@@ -227,7 +244,7 @@ CHANGELOG.md        版本变更记录
 
 ## 九、冒烟自检（升级 WorkBuddy / 换机后必跑）
 
-1. `python scripts/dispatch.py --status` → 应打印 `token: 有效`（serve 未运行也正常，派活时会自动拉起）
-2. 派一个最小任务（建一个文件 + commit）
-3. 验收：产物文件与 `git log` 的 commit 都真实存在 → 闭环可用
-4. 任一失败 → 先查 `references/troubleshooting.md` §14（502/代理）、§15（401/鉴权）
+1. `python scripts/dispatch.py --status` → 应打印 `token: 有效`、`CLI: <路径>`（serve 未运行也正常，派活时会自动拉起）
+2. 派一个最小任务（建一个文件 + commit；建议带 `--auto-review` 验证审核草稿生成）
+3. 验收：产物文件与 `git log` 的 commit 都真实存在；`inbox/review_roundN.md` 草稿生成 → 闭环可用
+4. 任一失败 → 先查 `references/troubleshooting.md` §14（502/代理）、§15（401/鉴权）、§20（CLI 找不到）

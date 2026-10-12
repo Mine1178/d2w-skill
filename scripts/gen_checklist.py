@@ -22,10 +22,12 @@ TEMPLATE = os.path.join(SKILL_DIR, "assets", "templates", "CHECKLIST.template.md
 FUNC_VERBS = re.compile(
     r"(支持|可以|提供|翻译|显示|保存|记录|朗读|播放|设置|导出|导入|搜索|查询|生成|转换|"
     r"打开|关闭|添加|删除|编辑|查看|发送|接收|同步|备份|恢复|加密|解密|压缩|解压|检测|监控|"
-    r"提醒|通知|计算|统计|汇总|筛选|排序|上传|下载|打印|复制|粘贴|功能)"
+    r"提醒|通知|计算|统计|计数|汇总|筛选|排序|上传|下载|打印|复制|粘贴|功能)"
 )
 MANUAL_RE = re.compile(r"(显示|界面|窗口|按钮|鼠标|点击|弹窗|菜单|对话框|托盘|快捷键|滚轮|朗读|发音|声音)")
-SKIP_SECTIONS = re.compile(r"(背景|目标|概述|简介|运行环境|安装|说明|注意事项|验收标准|优先级|范围|用户|非目标|名词|术语|附录|参考|风险|里程碑|计划)")
+SKIP_SECTIONS = re.compile(r"(背景|目标|概述|简介|运行环境|安装|说明|注意事项|验收标准|优先级|范围|用户|非目标|名词|术语|附录|参考|风险|里程碑|计划|功能需求|交互需求|技术约束|需求概述|产品需求|功能列表)")
+# 翻译/划词类项目才保留 C/D/F/G/H 组（模板内 QuickTrans 特例组）
+TRANS_KEYWORDS = re.compile(r"(翻译|划词|translate|词典|释义|译文|朗读|发音|单词本|收藏|历史记录)", re.I)
 
 def clean(text):
     t = re.sub(r"[#*`>|\[\]()]", "", text).strip()
@@ -40,6 +42,7 @@ def extract_features(prd_text):
         is_list = re.match(r"^[-*]\s+(.+)$", s)
         if m:
             title = clean(m.group(2))
+            title = re.sub(r"^\d+[\.、)\s]*\s*", "", title)  # 剥离 "2. " 编号残留
             if SKIP_SECTIONS.search(title):
                 continue
             if FUNC_VERBS.search(title) and 4 <= len(title) <= 40:
@@ -95,6 +98,16 @@ def main():
     # 版本头部占位
     new_tmpl = new_tmpl.replace("# <产品名> 验收清单（CHECKLIST）", "# 验收清单（CHECKLIST）")
     new_tmpl = new_tmpl.replace("版本：v0.1 | 对应 PRD：<v0.1>", "版本：v0.1 | 对应 PRD：<确认后填写>")
+
+    # 非翻译/划词类项目：删掉模板里的 QuickTrans 特例组（C 翻译引擎 / D 浮窗交互 / F 语言方向 / G 朗读 / H 单词本）
+    if not TRANS_KEYWORDS.search(prd):
+        for pat in (r"(## C\..*?)(?=\n## D\.)", r"(## D\..*?)(?=\n## E\.)",
+                    r"(## F\..*?)(?=\n## G\.)", r"(## G\..*?)(?=\n## H\.)",
+                    r"(## H\..*?)(?=\n## I\.)"):
+            mm = re.search(pat, new_tmpl, re.S)
+            if mm:
+                new_tmpl = new_tmpl[:mm.start()] + new_tmpl[mm.end():]
+        new_tmpl = new_tmpl.replace("## I. 存储", "## I. 存储（如有）")
 
     # 尾部提示
     new_tmpl += "\n## 生成说明\n\n- 本文件由 gen_checklist.py 按 PRD 自动生成草稿。\n"
