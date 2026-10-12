@@ -20,7 +20,7 @@ description: 双 AI 协作开发闭环（豆包 ⇄ WorkBuddy，双向，即 Do-
 
 ## 一、准备（一次性，两模式共用）
 
-1. **环境验证**：WorkBuddy 桌面版运行并登录；`python scripts/dispatch.py --status` 应打印 `token: 有效`（无效见 references/setup.md §5）
+1. **环境验证**：WorkBuddy 桌面版运行并登录；`python scripts/dispatch.py --status` 应打印 `token: 有效`（无效/401 见 references/troubleshooting.md §4，提取方式见 setup.md §5）
 2. **项目初始化（推荐一条命令）**：
    ```bash
    python scripts/init_project.py D:\path\新项目 --with-templates
@@ -52,7 +52,7 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
 - `--list-runs [--limit N] [--check]`：查派活历史与 run 活跃状态（记录在 .cache/runs.json）
 - `--queue tasks.txt`：批量派活（每行一个任务，可带 `[model=xxx]`，`#` 注释）；结束打印成功/失败汇总
 - `--auto-review`：派活结束后自动生成审核草稿 `inbox/review_roundN.md`（自动完成变更统计 + py_compile，AI 只填判断）→ 审核管道化，见 methodology §5.22
-- 换机/换项目：环境变量 `WB_CLI_PATH` / `WB_PORT` / `WB_PROJECT` / `WB_CACHE`；CLI 路径缺失时**自动探测**（进程定位 + 常见安装目录兜底）
+- 换机/换项目：环境变量 `WB_CLI_PATH` / `WB_PORT` / `WB_PROJECT` / `WB_CACHE`；CLI 路径缺失时**自动探测**（WB_CLI_PATH → 常见安装目录 → **跨盘符全盘扫描 C~Z** → 进程定位兜底，换笔记本/换盘符零配置）
 - **多项目并发**：同 serve 多 cwd 已支持；重度并行换端口（`WB_PORT=51742`），serve.pid/log 已按端口隔离，详见 methodology §5.19
 
 **模型选择（默认 glm-5.3，一句话可切换）**：
@@ -191,7 +191,7 @@ python dispatch.py "在 <cwd> 目录：用 PyInstaller 打包 <入口.py>，要�
 | 派活报 **502** / status 假报"运行中" | 环境代理劫持 loopback → 脚本已用空 ProxyHandler 直连；协议见 troubleshooting §14 |
 | 派活报 **401 AUTH_REQUIRED** | 新版 CLI 的 `--auth none` 失效 → 脚本已注入 `CODEBUDDY_GATEWAY_AUTH=none`；见 §15 |
 | 派活被拦"危险命令" | 任务文本含 rm/format/关机/注册表删除等模式 → 默认拒绝；确认安全加 `--danger-allow`；见 methodology §5.21 |
-| CLI 找不到 | 脚本自动探测（进程定位+常见目录）；仍失败设 `WB_CLI_PATH` 或先启动 WorkBuddy 桌面版；见 troubleshooting §20 |
+| CLI 找不到 | 脚本自动探测（常见安装目录 + 跨盘符全盘扫描 + 进程定位）；仍失败设 `WB_CLI_PATH` 或先启动 WorkBuddy 桌面版；见 troubleshooting §20 |
 | serve 孤儿进程/端口残留 | `python dispatch.py --stop-all` 一次清理缓存下所有端口；见 troubleshooting §22 |
 | commit 卡住/无文本输出 | serve 必须 `--permission-mode auto`（dispatch.py 已内置） |
 | commit 报身份缺失 | 仓库级配 user.name/email |

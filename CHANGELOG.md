@@ -3,6 +3,34 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.2] — 2026-10-12
+
+系统性一致性审计修复（通读全部 20 个技能文件，消除多版本迭代遗留的前后不一致）。
+
+### Fixed
+
+- **CHANGELOG [1.3.4] 条目文本损坏**：`frontmatter name: d2w` 被断行成 `frontmatter \n ame: d2w`，已修复
+- **review_round.template.md 头部残留旧评分口径**：仍写"收敛时总分须 ≥20"，与 v1.5.0 锚定规范冲突——
+  统一为"收敛线 = 实际评维数 × 4；非 GUI 界面维记 N/A 并从分母剔除"
+- **USER_MANUAL_PDF_SPEC.md 产物名不一致**：规范内写 `USER_MANUAL.pdf`，SKILL.md/模板写
+  `<产品名>_使用手册.pdf` —— 已统一为 `<cwd>/dist/<产品名>_使用手册.pdf`
+- **USER_MANUAL_PDF_SPEC.md 派活模板路径错误**：样式规范路径写成 `<cwd>/inbox/USER_MANUAL_PDF_SPEC.md`，
+  实际规范位于技能包 `assets/ui_spec/` —— 已改为 `<技能目录>/assets/ui_spec/...` 并提示先复制到项目根
+- **SKILL.md CLI 探测描述过时**：只写"进程定位 + 常见安装目录"，与 v1.5.1 跨盘符全盘扫描（C~Z）实现不符——
+  已同步探测顺序（WB_CLI_PATH → 常见安装目录 → 跨盘符扫描 → 进程定位），常见坑表同步
+- **SKILL.md token 无效指引不够精确**：原指向 setup §5（提取方式），改为 troubleshooting §4（401/token 排查）+ setup §5
+- **DOD.template.md 组名口径**："A~Q 组" → "适用组 A~Q"（模板可按 PRD 裁剪删组，不留死组引用）
+
+### Cleaned
+
+- 删除技能目录内运行产物 `.cache/wb_token.txt`（token 缓存属运行期文件，已 gitignore，派活时自动重新提取）
+
+### Verified
+
+- 全部 6 个脚本 `python -m py_compile` 通过；`quick_validate.py` 校验通过
+- 修复后 git commit 落盘
+
+
 ## [1.5.1] — 2026-10-12
 
 CLI 自动探测跨盘符化（换笔记本/换盘符零配置）。
@@ -106,8 +134,7 @@ CLI 自动探测跨盘符化（换笔记本/换盘符零配置）。
 ### Changed
 
 - 技能目录 do2wo → **d2w**（小写，符合命名规范，quick_validate 零警告）
-- frontmatter 
-ame: d2w；全文 Do2Wo → D2W（SKILL.md / CHANGELOG / references / templates）
+- frontmatter `name: d2w`；全文 Do2Wo → D2W（SKILL.md / CHANGELOG / references / templates）
 - 清理遗留副本 doubao-workbuddy-collab 与旧目录 do2wo：豆包客户端有技能目录自动同步守护（删除后约 45s 自动重建），
   故改为**内容同步一致**——旧入口的 SKILL.md/脚本/模板全部覆盖为 d2w 最新版，任何入口触发都是新版逻辑
 
