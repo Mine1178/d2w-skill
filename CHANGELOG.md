@@ -3,6 +3,25 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.1] — 2026-10-12
+
+CLI 自动探测跨盘符化（换笔记本/换盘符零配置）。
+
+### Changed
+
+- `scripts/dispatch.py`：新增跨盘符全盘扫描兜底——枚举存在的 C~Z 盘符，
+  对每个盘套用常见安装层级（LenovoSoftstore / Program Files / 用户级 Programs / 一二级目录），
+  接在默认 glob 之后、进程推导之前
+- `references/setup.md` §1.2、`references/methodology.md` §5.23：探测顺序与换机说明同步
+
+### Verified
+
+- py_compile 通过；模拟"默认路径失效"实测：find_cli 跨盘扫描仍命中
+  `E:\LenovoSoftstore\Install\WorkBuddy\...`（盘符枚举 C/D/E 正常）
+- 换机流程：整包复制 `.user_skills\d2w` → 新机装好 WorkBuddy 并登录 →
+  `--status` 自动定位 CLI → 最小派活冒烟（本机无法验证新机，逻辑经路径失效模拟验证）
+
+
 ## [1.5.0] — 2026-10-12
 
 三大方向落地（安全白名单 / 派活-审核管道化 / 初始化向导+技能 git 化）+ P1/P2 全补齐。

@@ -390,14 +390,16 @@ inbox/tasks/001_<简述>.md     # NNN 三位序号，递增
 
 **与定时任务的关系**：定时审核仍是兜底（用户不在场时也跑）；`--auto-review` 是"人在场时的即时管道"。两者共用同一份 review 模板与基线文件，不冲突。
 
-### 5.23 CLI 路径自动探测与升级适配（1.5.0 新增）
+### 5.23 CLI 路径自动探测与升级适配（1.5.0 新增，1.5.1 跨盘符）
 
 - 默认路径不存在时，`dispatch.py` 自动按顺序尝试：
   1. `WB_CLI_PATH` 环境变量（最高优先）
-  2. 默认/常见安装目录 glob（Program Files*、D 盘常见位置）
-  3. 从运行中的 WorkBuddy 进程 `ExecutablePath` 推导 CLI 位置
+  2. 默认/常见安装目录 glob（Program Files*、D 盘、用户级 Programs）
+  3. **跨盘符全盘扫描**（枚举 C~Z 存在的盘符 × 常见安装层级：LenovoSoftstore/Program Files/用户 Programs/一二级目录）
+  4. 从运行中的 WorkBuddy 进程 `ExecutablePath` 推导 CLI 位置
 - 全部失败 → 报错提示（"设 WB_CLI_PATH 或先启动 WorkBuddy 桌面版"），不再静默用错误路径
 - `--status` 直接显示解析到的 CLI 路径，便于核对
+- **换笔记本/换盘符零配置**：技能包整个拷到新机后，只要 WorkBuddy 装好并登录，`--status` 就能自动定位 CLI（实测：默认路径失效时跨盘扫描仍命中 E 盘）
 - **升级适配提醒**：CLI 升级后若派活异常，先跑冒烟自检（SKILL.md §九）确认：token 有效 / CLI 可定位 / serve 起得来；版本相关的坑（--auth none 失效等）见 troubleshooting §15
 
 ### 5.24 副本同步与技能自身 git 化（1.5.0 新增）

@@ -82,8 +82,44 @@ def sanitize_task(text):
 CLI_DEFAULT_PATTERNS = [
     r"E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
     r"C:\Program Files*\*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+    r"C:\Program Files*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
     r"D:\*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+    r"C:\Users\*\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
 ]
+# 跨盘符兜底模式（换机/换盘符时用）：对每个存在的盘符套用常见安装层级
+CLI_CROSS_DRIVE_PATTERNS = [
+    r"{d}:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+    r"{d}:\*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+    r"{d}:\*\*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+    r"{d}:\Program Files\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+    r"{d}:\Program Files (x86)\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+    r"{d}:\Users\*\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+]
+
+def _drives():
+    """枚举存在的盘符（C~Z），用于跨盘符扫描。"""
+    import string
+    out = []
+    for ch in string.ascii_uppercase:
+        p = f"{ch}:\\"
+        try:
+            if os.path.exists(p):
+                out.append(ch)
+        except Exception:
+            pass
+    return out
+
+def _scan_cross_drive():
+    """跨盘符全盘候选扫描：每个盘符 × 常见安装层级模式，取第一个命中。"""
+    for d in _drives():
+        for pat in CLI_CROSS_DRIVE_PATTERNS:
+            try:
+                hits = glob.glob(pat.format(d=d))
+            except Exception:
+                continue
+            if hits:
+                return hits[0]
+    return None
 
 def _find_cli_by_proc():
     """从正在运行的 WorkBuddy 进程可执行路径推导 CLI 位置。"""
@@ -102,7 +138,7 @@ def _find_cli_by_proc():
     return None
 
 def find_cli():
-    """解析 CLI 路径：WB_CLI_PATH 显式指定 > 默认/常见安装目录 > 进程推导 > None。"""
+    """解析 CLI 路径：WB_CLI_PATH 显式指定 > 默认/常见安装目录 > 跨盘符全盘扫描 > 进程推导 > None。"""
     if os.environ.get("WB_CLI_PATH"):
         return os.environ["WB_CLI_PATH"]
     if os.path.exists(CLI):
@@ -111,6 +147,9 @@ def find_cli():
         hits = glob.glob(pat)
         if hits:
             return hits[0]
+    hit = _scan_cross_drive()
+    if hit:
+        return hit
     cand = _find_cli_by_proc()
     if cand:
         return cand

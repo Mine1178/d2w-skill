@@ -11,8 +11,8 @@
 ### 1.2 headless CLI 入口（派活桥核心）
 - 典型路径（以实际探测为准）：
   `E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js`
-- **自动探测（v1.5.0 起）**：dispatch.py 在默认路径不存在时按顺序尝试——
-  `WB_CLI_PATH` 环境变量 → 常见安装目录 glob（Program Files* / D 盘）→ 从运行中的 WorkBuddy 进程推导；全部失败才报错提示。
+- **自动探测（v1.5.0 起，v1.5.1 跨盘符）**：dispatch.py 在默认路径不存在时按顺序尝试——
+  `WB_CLI_PATH` 环境变量 → 常见安装目录 glob（Program Files* / D 盘 / 用户级 Programs）→ **跨盘符全盘扫描**（枚举 C~Z 盘 × 常见安装层级，含 LenovoSoftstore/Program Files/用户 Programs/两级目录）→ 从运行中的 WorkBuddy 进程推导；全部失败才报错提示。
   `python dispatch.py --status` 会直接显示解析到的 CLI 路径。
 - 手工探测命令：
   ```powershell
