@@ -3,6 +3,20 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.6] — 2026-10-12
+
+收款码图收编为技能包正式资产。
+
+### Added
+
+- `assets/money_code/alipay.jpg` / `wechatpay.jpg`：两张收款码随技能包分发，
+  派活时直接复制进项目 `assets/`，不再依赖外部绝对路径。
+
+### Changed
+
+- SKILL.md / methodology §5.26 / UI_LAYOUT_SPEC §五：路径引用从
+  `D:\Desktop\SD\15.DW2_skill\Money_code\` 改为 `assets/money_code/`（技能包内相对路径）。
+
 ## [1.5.5] — 2026-10-12
 
 修正收款码源文件路径（用户移动了码图位置）。

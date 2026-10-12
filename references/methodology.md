@@ -437,7 +437,7 @@ inbox/tasks/001_<简述>.md     # NNN 三位序号，递增
 - 按钮：「☕ 赞助作者」，secondary 浅底深字（与五级按钮同规格，bd=0、cursor=hand2、padx=12 pady=4），不突兀
 - 点击行为：弹模态窗（transient + grab_set + 居中 + 不可缩放），标题"请作者喝杯咖啡"，正文一行："如果你喜欢这个工具，可以请作者喝杯咖啡，感谢赞助"
 - 收款码：窗口内左右并列支付宝 + 微信两张码图（等大居中，间距 16px），窗口大小刚好包络两张码图（约 420×380，按码图实际尺寸微调）
-- 资源：码图源文件 `D:\Desktop\SD\15.DW2_skill\Money_code\{alipay,wechatpay}.jpg` 必须复制进项目 `assets/` 或 `resources/`，代码用 `os.path` 相对路径读取，**禁止硬编码绝对路径**（否则打包后/换机就裂图）
+- 资源：码图已随技能包分发在 `assets/money_code/{alipay,wechatpay}.jpg`（派活时直接复制进项目 `assets/` 或 `resources/`），代码用 `os.path` 相对路径读取，**禁止硬编码绝对路径**（否则打包后/换机就裂图）
 - 打包注意：PyInstaller 用 `--add-data "assets;assets"`，运行时走 `sys._MEIPASS` 资源路径
 
 **审核硬项**（CHECKLIST L10）：按钮风格违和（primary 大红大绿）、码图被裁剪/拉伸、窗口过大留大片白、硬编码绝对路径、码图没打进包——任一问题按 P1 报。
