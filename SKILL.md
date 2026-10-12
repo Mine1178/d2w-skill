@@ -95,6 +95,7 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
 - **美化**：配色协调有层次（深色导航 + 浅色内容 + 橙/蓝/绿/红语义强调色）、圆角、留白适度
 - **按钮整齐划一**：同尺寸、同间距、对齐网格，五级语义底色（primary/info/success/danger/secondary），有 hover/按下反馈
 - **字体显示完全无遮挡**：微软雅黑层级（20/12/10/9pt），文字不截断、不重叠，长文本自动换行或自适应，字号有层级
+- **文本排版无孤行**（v1.5.9 新增，代码产出软件最高频缺陷）：所有多行文本必设 `wraplength` 随窗口宽度刷新；段落末尾不孤字/孤行；正文 `justify=LEFT` 而非 CENTER；label 与控件同基线不重叠；不截断不省略号（详细规范见 `assets/ui_spec/UI_LAYOUT_SPEC.md §4.4`）
 - **关于页赞助弹窗（v1.5.4 起必带，v1.5.8 细化）**：
   - 按钮：关于页底部版权信息上方，文案「☕ 赞助作者」，secondary 浅底深字（bg=#f1f5f9, fg=正文色, relief=SOLID, bd=1, padx=16, pady=6, cursor=hand2, hover activebg=#e2e8f0）
   - 弹窗：Toplevel 模态，默认 1060×880，minsize 720×560，resizable(True,True)，屏幕居中（不跟随按钮），transient+grab_set
@@ -102,7 +103,7 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
   - 一键放大：点「⤢ 放大」保存 geometry → `dlg.state("zoomed")` 全屏 → 按钮变「🗗 还原」；再点恢复 geometry；闭包存 `state={"zoomed":False,"normal_geom":...}`
   - 码图路径：`assets/alipay.jpg` / `assets/wechatpay.jpg`，用 `_resource_path()`（PyInstaller `_MEIPASS` 兼容），打包 `--add-data "<项目根>/assets;assets"`
 - **验收方式**：实际运行 + 截图目检逐项过（布局/遮挡/对齐/DPI），发现"布局错乱/文字截断/按钮不对齐"按 P0/P1 报
-- CHECKLIST 用 L 组（界面质量 GUI 必检，L1~L10 含布局统一与赞助按钮）逐条打勾
+- CHECKLIST 用 L 组（界面质量 GUI 必检，L1~L11 含布局统一与赞助按钮）逐条打勾
 
 ### 审核（甲方）
 0. **先验证 commit 是否真的产生**：`git log --oneline -3`——agent 可能写完代码却漏 commit（真实踩过），无 commit 视为未完成，进 P1
