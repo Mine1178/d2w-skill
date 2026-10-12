@@ -136,6 +136,11 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
 
 ### 工作流触发方式
 - **按需**：用户说"看下任务队列" → 跑 poll_tasks.py 处理
+- **通知器（推荐，替代人工喊话）**：WorkBuddy 侧用
+  `python scripts/notify_doubao.py --send --task "..."` 自动把任务单写进 inbox、拼好指令、
+  叫醒豆包并发送。**剪贴板被 WorkBuddy 自身锁定时**（实测：系统剪贴板被 WorkBuddy.exe 的
+  Chrome_MessageWindow 稳定持有，OpenClipboard 报 error 5），脚本会**自动降级**为 SendInput
+  键盘逐字输入；首次先 `--pick` 标定输入框坐标（把鼠标移入豆包输入框后运行），详见该脚本 docstring。
 - **定时**：建每小时 cron 任务（模板 B，见 assets/templates/cron_query.template.md），到点自动轮询处理并汇报
 - WorkBuddy 侧由用户告知约定：任务写 inbox/tasks/，结果读 inbox/results/
 
@@ -226,6 +231,8 @@ scripts/
   dispatch.py       模式 A 派活桥（token 提取 + serve + 派任务 + 读结果 + 模型选择 + 危险命令拦截
                     + CLI 自动探测 + --queue/--list-runs/--stop-all/--auto-review/--smoke）
   poll_tasks.py     模式 B 任务队列轮询（列任务 / 标记已处理 / 撤销标记 / 重置）
+  notify_doubao.py  模式 B 通知器（WorkBuddy→豆包：写任务单+拼指令+进剪贴板+叫醒豆包+自动发送；
+                    剪贴板被锁时 --type/--send 自动降级为 SendInput 键盘逐字输入，--pick 标定输入框坐标）
   init_project.py   项目初始化向导（git+身份+.gitignore+inbox+复制脚本+模板，一条命令）
   gen_checklist.py  按 PRD.md 自动生成 CHECKLIST.md 草稿（提取功能点）
   sync_copies.py    副本同步（d2w -> do2wo/doubao-workbuddy-collab，防宿主旧快照复活）

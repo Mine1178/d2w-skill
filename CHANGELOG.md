@@ -3,6 +3,39 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.17] — 2026-10-13
+
+模式 B 通知器（notify_doubao.py）增加**剪贴板被锁时的键盘输入降级路径**——实测发现系统剪贴板被 WorkBuddy 锁定，纯剪贴板方案在本机不可用。
+
+### Added
+
+- **剪贴板 owner 检测**（`clipboard_owner()` / `_clip_owner_hint()`）：`--status` 在剪贴板不可用时
+  打印当前持有者进程（实测 = WorkBuddy.exe PID 13432 的 `Chrome_MessageWindow`），指明"被谁锁"。
+- **键盘逐字输入降级**：
+  - `--type`：强制用 `SendInput KEYEVENTF_UNICODE` 逐字符键入（支持中文，不依赖剪贴板）
+  - `--click-x/--click-y`：--send 前先点击豆包输入框坐标（显式指定）
+  - `--pick`：把鼠标移入豆包输入框后运行，读坐标写入 `.cache/doubao_input_pos.txt`，`--send` 自动复用
+  - `--send` 自动降级：剪贴板可用→Ctrl+V+Enter；不可用→自动转键盘逐字输入
+- `resolve_click()`：点击坐标来源优先级 = `--click-x/--click-y` > 缓存 > 无点击
+
+### Fixed
+
+- 依赖缺失导致 B 方向跑不通：当前 Python 3.14 未装 `pywin32`/`psutil`，已安装
+  （pywin32-312 cp314 wheel + psutil），`--status` 全绿。
+
+### Changed
+
+- `notify_doubao.py` docstring 补"剪贴板被锁时的降级"实测依据与 `--pick`/`--type` 用法。
+
+### Verified
+
+- `python -m py_compile notify_doubao.py` 通过
+- 单元验证：`sizeof(INPUT)=40`（64 位正确）、SendInput 中文返回 2（down+up 都发出）、`type_unicode_text` 无异常
+- `--status`：剪贴板不可用时正确打印持有者 WorkBuddy.exe
+- 说明：真实"打入豆包输入框"的端到端受当前会话限制（前台为锁屏界面），
+  需豆包窗口在前台时用 `--pick` 标定 + `--send --type` 实测
+
+
 ## [1.5.11] — 2026-10-12
 
 README 过时描述修正（v1.5.9/v1.5.10 同步遗漏）。
