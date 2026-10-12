@@ -48,6 +48,7 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
 **安全边界（v1.5.0 起默认启用）**：任务文本含危险命令模式（删除/格式化/关机/清注册表/盘符级删除）会被脚本**拒绝派活**；确属安全任务加 `--danger-allow` 显式放行。详见 methodology §5.21。
 - `--debug`：SSE 读不到结果时看原始事件
 - `--status`：查 token / serve / CLI 路径 / 默认模型
+- `--smoke`：**一条命令跑冒烟自检**（环境检查 → 派最小任务 → 验证产物与 commit 落盘）；升级 WorkBuddy / 换机后必跑
 - `--stop`：停当前端口 serve；`--stop-all`：清理缓存下所有端口 serve（孤儿进程）
 - `--list-runs [--limit N] [--check]`：查派活历史与 run 活跃状态（记录在 .cache/runs.json）
 - `--queue tasks.txt`：批量派活（每行一个任务，可带 `[model=xxx]`，`#` 注释）；结束打印成功/失败汇总
@@ -216,7 +217,7 @@ python dispatch.py "在 <cwd> 目录：用 PyInstaller 打包 <入口.py>，要�
 ```
 scripts/
   dispatch.py       模式 A 派活桥（token 提取 + serve + 派任务 + 读结果 + 模型选择 + 危险命令拦截
-                    + CLI 自动探测 + --queue/--list-runs/--stop-all/--auto-review）
+                    + CLI 自动探测 + --queue/--list-runs/--stop-all/--auto-review/--smoke）
   poll_tasks.py     模式 B 任务队列轮询（列任务 / 标记已处理 / 撤销标记 / 重置）
   init_project.py   项目初始化向导（git+身份+.gitignore+inbox+复制脚本+模板，一条命令）
   gen_checklist.py  按 PRD.md 自动生成 CHECKLIST.md 草稿（提取功能点）
@@ -244,6 +245,13 @@ CHANGELOG.md        版本变更记录
 
 ## 九、冒烟自检（升级 WorkBuddy / 换机后必跑）
 
+**推荐一条命令**（v1.5.3 起）：
+```bash
+python scripts/dispatch.py --smoke --cwd <测试项目路径>
+```
+自动完成：环境检查（token/CLI/serve）→ 派最小任务（建 smoke_test.txt + commit）→ 验证产物文件与 commit 真实落盘。退出码 0=PASS，1=FAIL。
+
+**手动三步（等价）**：
 1. `python scripts/dispatch.py --status` → 应打印 `token: 有效`、`CLI: <路径>`（serve 未运行也正常，派活时会自动拉起）
 2. 派一个最小任务（建一个文件 + commit；建议带 `--auto-review` 验证审核草稿生成）
 3. 验收：产物文件与 `git log` 的 commit 都真实存在；`inbox/review_roundN.md` 草稿生成 → 闭环可用

@@ -3,6 +3,32 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.3] — 2026-10-12
+
+三项增强（模型清单对齐新版 WorkBuddy 配置 / selftest 样例去项目特例化 / --smoke 一条命令冒烟）。
+
+### Added
+
+- **`dispatch.py --smoke`**：一条命令跑冒烟自检——环境检查（token/CLI/serve）→ 派最小任务（建
+  smoke_test.txt + commit）→ 验证产物文件与 commit 真实落盘。升级 WorkBuddy / 换机后不用再手跑三步。
+  退出码 0=PASS / 1=FAIL；smoke 产物留在项目里可保留或 `git reset --hard` 清理。
+- **模型清单新增**（对齐 2026-10 WorkBuddy 配置 `acc-product-config-v3.json`）：
+  `default-1.2` Claude-4.0-Sonnet、`default-1.1` Claude-3.7-Sonnet、`glm-4.6`、
+  `hunyuan-2.0-instruct`、`deepseek-v4-flash`、`wb-lite`。
+- **credits 倍率字段说明**：新配置 `models[].credits_multiplier` 已为空，setup §9.3 改为"历史 credits"
+  列并标注仅供档位参考，不再硬填当前倍率。
+
+### Changed
+
+- `assets/templates/selftest.example.md`：示例函数从 QuickTrans 特例 `translate_word` 泛化为通用
+  `slugify`（标题→URL slug），任何项目照搬结构即可；补"覆盖度检查：三类用例缺一即 P1"。
+- `SKILL.md` §九 冒烟自检：首选 `--smoke` 一条命令，手动三步保留为等价方案；派活命令列表与资源索引同步。
+
+### Verified
+
+- 6 个脚本 `python -m py_compile` 全过；`dispatch.py --help` 显示 `--smoke` 参数注册成功。
+
+
 ## [1.5.2] — 2026-10-12
 
 系统性一致性审计修复（通读全部 20 个技能文件，消除多版本迭代遗留的前后不一致）。

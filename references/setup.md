@@ -142,24 +142,39 @@ $env:WB_CACHE = "D:\新项目目录\.cache"          # 多端口共用 token 时
 3. 环境变量 `WB_MODEL=<id>`：改 D2W 全局默认
 > 原理：POST /api/v1/runs 的 body 支持 `model` 字段（源码：`requestOptions.model || options.model || currentModelId || "default"`，请求指定优先）。
 
-### 9.3 模型清单（id / 名称 / 积分倍率 / 特点，实测自 acc-product-config-v3.json）
-| 模型 id | 名称 | credits | 特点 |
+### 9.3 模型清单（id / 名称 / 特点，实测自 acc-product-config-v3.json）
+
+> **credits 倍率说明**：v2026-10 WorkBuddy 更新后，配置文件 `models[].credits_multiplier` 字段已为空，
+> 不再从服务端配置暴露倍率。下表"历史 credits"列为 2026-10-12 审计时实测值，仅供档位参考；
+> 当前实际倍率以 WorkBuddy 桌面显示为准。CLI/API 通道与桌面积分分离属观察事实（§9.4）。
+
+| 模型 id | 名称 | 历史 credits | 特点 |
 |---|---|---|---|
 | `fast-model` | 快速 | x0.21 | 官方默认档，简单任务快答 |
 | `balanced-model` | 均衡 | x0.65 | 日常任务 |
 | `deep-model` | 极致 | x1.20 | 深度与准确性优先，复杂分析 |
-| `glm-5.3` | GLM-5.3 | x0.79 | **旗舰**：复杂软件工程/长程 Agent，1M 上下文 |
+| `glm-5.3` | GLM-5.3 | x0.79 | **D2W 默认旗舰**：复杂软件工程/长程 Agent，1M 上下文 |
 | `glm-5.3-flash` | GLM-5.3-Flash | x0.06 | 多模态视觉 |
 | `glm-5.2` | GLM-5.2 | x0.79 | 1M 上下文长程 |
+| `glm-4.6` | GLM-4.6 | — | GLM 4.6 通用档（2026-10 新增） |
 | `kimi-k3-1` | Kimi-K3 | x1.62 | 最强长程自主/前端，1M（最贵档） |
 | `kimi-k2.8-preview` | Kimi-K2.8 | x0.77 | 长程自主 |
 | `hy4-preview` | Hy4 preview | x0.29 | 腾讯混元4 思考，960K |
 | `hy3` / `hy3-x` | Hy3 | x0.00/x0.05 | 混元思考 |
+| `hunyuan-2.0-instruct` | Hunyuan-2.0 | — | 腾讯混元 2.0 指令模型（2026-10 新增） |
 | `step-5-preview` | Step-5 | x0.00 | 阶跃旗舰基模，1M（免费档） |
 | `deepseek-v4-pro` | DS-V4-Pro | x0.51 | DeepSeek 旗舰，1M |
 | `deepseek-v4.1-flash` | DS-V4.1 | x0.11 | 1M 多模态 |
+| `deepseek-v4-flash` | DS-V4-Flash | — | DeepSeek V4 轻量快速档（2026-10 新增） |
 | `minimax-m3` | MiniMax-M3 | x0.25 | 代码/智能体 |
 | `space-bunny` | Space-Bunny | x0.08 | 速度+编码强、匿名模型，1M/128K |
+| `default-1.2` | Claude-4.0-Sonnet | — | Anthropic Claude 4.0（2026-10 新增，复杂推理） |
+| `default-1.1` | Claude-3.7-Sonnet | — | Anthropic Claude 3.7 |
+| `wb-lite` | wb-lite | — | WorkBuddy 轻量档（2026-10 新增，快速任务） |
+
+> 完整模型列表（含 kimi-k2.7/k2.6/k2.5、minimax-m2.5/m2.7、glm-5v-turbo、glm-4.6v、
+> hunyuan-3b/7b-dense、custom-local:* 本地模型等）直接读配置文件：
+> `~/.workbuddy/cache/acc-product-config-v3.json` 的 `models` 数组。WorkBuddy 升级后以配置为准。
 
 ### 9.4 注意
 - `credits` 倍率是**服务端积分计量**（x0.08~x1.62），与桌面 UI 显示的积分余额分离；CLI 通道暂不扣桌面积分属**观察事实、非官方承诺**，别规模化滥用（methodology §5.15）

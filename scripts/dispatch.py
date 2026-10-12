@@ -10,6 +10,7 @@ dispatch.py — 豆包 -> WorkBuddy 派活桥（双 AI 协作闭环核心工具�
   python dispatch.py --stop          # 停止当前端口 serve 服务
   python dispatch.py --stop-all      # 停止本项目缓存目录下所有端口的 serve（清理孤儿）
   python dispatch.py --status        # 查看 serve 与登录态
+  python dispatch.py --smoke         # 一条命令跑冒烟自检（环境→派最小任务→验证 commit）
   python dispatch.py --danger-allow  # 允许派发含危险命令模式的任务（默认拦截并拒绝）
 
 安全边界（v1.5.0 起默认启用）：
@@ -512,6 +513,59 @@ STATUS: 待审核
     print(f"[auto-review] 已生成审核草稿 inbox/review_round{n}.md（commit {cur[:8]}）", file=sys.stderr)
     print("请审核方填写判断后，把该 commit hash 写入 inbox/last_reviewed_commit.txt 完成基线更新", file=sys.stderr)
 
+# ---------- 冒烟自检（--smoke） ----------
+def smoke(cwd, timeout=120):
+    """一条命令跑冒烟三连：环境检查 → 派最小任务 → 验证产物文件与 commit 真实落盘。
+
+    升级 WorkBuddy / 换机后必跑。退出码：0=PASS，1=FAIL。
+    smoke 产物（smoke_test.txt + smoke commit）留在项目里，用户可保留或 git reset --hard 清理。
+    """
+    print("=== D2W 冒烟自检 ===\n")
+    # 1. 环境检查
+    tok = load_token()
+    cli_path = find_cli()
+    tok_ok = token_valid(tok)
+    print(f"[1/3] token: {'有效' if tok_ok else '无效'}")
+    print(f"      CLI:   {cli_path or '未找到'}")
+    print(f"      serve: {'运行中' if port_busy() else '未运行（派活时自动拉起）'}")
+    if not tok_ok:
+        print("\nFAIL: token 无效——WorkBuddy 桌面版在运行并已登录？删 .cache/wb_token.txt 后重试。")
+        sys.exit(1)
+    if not cli_path:
+        print("\nFAIL: CLI 未找到——设 WB_CLI_PATH 环境变量，或先启动 WorkBuddy 桌面版。")
+        sys.exit(1)
+    # 检查 cwd 是 git 仓库且有 HEAD
+    before = git_head(cwd)
+    if before is None:
+        print(f"\nFAIL: {cwd} 不是 git 仓库（或无任何 commit）。")
+        print("      先用 python scripts/init_project.py <路径> --with-templates 初始化项目，再跑 --smoke。")
+        sys.exit(1)
+    # 2. 派最小任务
+    print(f"\n[2/3] 派最小任务到 {cwd} ...")
+    smoke_text = (
+        f"在 {cwd} 目录：创建文件 smoke_test.txt，"
+        f"内容写 'd2w smoke OK {time.strftime('%Y-%m-%d %H:%M:%S')}'，"
+        f"然后 git add smoke_test.txt && git commit -m 'smoke test'。"
+        f"不要修改其他任何文件。"
+    )
+    try:
+        dispatch(smoke_text, cwd, timeout, debug=False)
+    except SystemExit as e:
+        print(f"\nFAIL: 派活失败（exit={e.code}），查 references/troubleshooting.md §14(502)/§15(401)/§20(CLI)。")
+        sys.exit(1)
+    # 3. 验证
+    after = git_head(cwd)
+    smoke_file = os.path.join(cwd, "smoke_test.txt")
+    ok_file = os.path.exists(smoke_file)
+    ok_commit = after != before
+    print(f"\n[3/3] 验证：文件存在={ok_file}, commit 变化={ok_commit}")
+    print(f"      before={before[:8]}  after={(after or 'None')[:8]}")
+    if ok_file and ok_commit:
+        print("\nPASS: D2W 闭环可用。smoke_test.txt 与 smoke commit 可保留，或用 git reset --hard <before> 清理。")
+    else:
+        print("\nFAIL: 产物或 commit 缺失——agent 可能漏 commit，查 references/troubleshooting.md §17(SSE断/漏commit)。")
+        sys.exit(1)
+
 # ---------- 派活 ----------
 def dispatch(text, cwd, timeout, debug, cli_model=None):
     # 任务文本安全边界：危险命令拦截（默认拒绝，--danger-allow 放行）
@@ -594,6 +648,7 @@ if __name__ == "__main__":
     ap.add_argument("--auto-review", action="store_true", help="派活结束后自动生成审核草稿")
     ap.add_argument("--danger-allow", action="store_true", help="放行含危险命令模式的任务（默认拦截）")
     ap.add_argument("--status", action="store_true", help="查看状态")
+    ap.add_argument("--smoke", action="store_true", help="一条命令跑冒烟自检（环境→派最小任务→验证 commit）")
     args = ap.parse_args()
     DANGER_ALLOW = args.danger_allow
     if args.stop:
@@ -607,6 +662,8 @@ if __name__ == "__main__":
         print("serve:", "运行中" if port_busy() else "未运行")
         print("CLI:", cli_path or "未找到（设 WB_CLI_PATH 或先启动 WorkBuddy 桌面版）")
         print("默认模型:", MODEL, "(可用 --model / 任务文本 [model=xxx] 切换)")
+    elif args.smoke:
+        smoke(args.cwd, args.timeout)
     elif args.list_runs:
         list_runs(args.limit, args.check)
     elif args.queue:
