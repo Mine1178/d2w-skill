@@ -1,10 +1,18 @@
-# D2W — 双 AI 协作开发闭环
+<div align="center">
+
+# 🚀 D2W — 双 AI 协作开发闭环
 
 > **两个 AI 互相派活，你只需要喝茶。**
 >
-> 豆包 ⇄ 腾讯 WorkBuddy，一个派活审核、一个写代码改 bug，自动跑通
-> "需求 → 写码 → 审核 → 改 bug → 收敛 → 打包 EXE → 安装程序 → 使用手册"
-> 全流程。**无需手动切换窗口，无需手动复制代码，无需手动复核——AI 闭环，你拍板。**
+> 豆包 ⇄ 腾讯 WorkBuddy · 一个派活审核、一个写码改 bug，
+> 自动跑通 **需求 → 写码 → 审核 → 改 bug → 收敛 → 打包 EXE → 安装程序 → 使用手册** 全流程。
+> **无需手动切换窗口、无需手动复制代码、无需手动复核——AI 闭环，你拍板。**
+
+[![version](https://img.shields.io/badge/version-v1.5.19-blue)](https://github.com/Mine1178/d2w-skill)
+[![python](https://img.shields.io/badge/Python-3.9%2B-3776AB)]()
+[![license](https://img.shields.io/badge/License-MIT-green)]()
+
+</div>
 
 ---
 
@@ -21,64 +29,64 @@
 
 ## ✨ 核心特性
 
-- **∞ 无穷积分派活**：CLI/API 通道直连 WorkBuddy headless，**不走桌面客户端积分计量**，想派多少派多少
-- **双模式闭环**：模式 A 豆包→WorkBuddy（全自动 API）；模式 B WorkBuddy→豆包（文件信箱）
+- **∞ 无穷积分派活**：CLI/API 通道直连 WorkBuddy headless，**不走桌面客户端积分计量**（观察事实非承诺）
+- **双模式闭环**：模式 A 豆包→WorkBuddy（全自动 API）；模式 B WorkBuddy→豆包（文件信箱 + 兜底自闭环）
 - **🛡️ 安全边界默认开启**：危险命令（删除/格式化/关机/注册表）自动拦截，token 仅绑 loopback 不外传
-- **🤖 模型自由切换**：默认 glm-5.3，一句话切 kimi-k3-1（最强长程）/ Claude-4.0 / DeepSeek-V4 / 混元4 / 免费阶跃
-- **📦 一站式交付**：开发收敛后自动派活打包 EXE、安装程序、PDF 使用手册、交付归档
+- **🤖 模型自由切换**：默认 glm-5.3，一句话切 kimi-k3-1 / kimi-k2.8-preview / DeepSeek-V4 / 混元4 / 免费阶跃
+- **🧠 独立审核兜底**：豆包不响应时 WorkBuddy 自审自查，独立模型审核链（glm→kimi→balanced）自动回退
+- **📦 一站式交付**：开发收敛后自动派活打包 EXE、安装程序、PDF 使用手册、DOD 归档
 - **🎨 GUI 硬规范**：默认 Wifibond 左导航布局、11 项界面验收（含关于页赞助弹窗、文本排版无孤行）
 - **🔄 跨盘符自动探测**：换机/换盘符零配置，自动定位 WorkBuddy CLI
 - **📝 冒烟自检一条命令**：`--smoke` 自动验证环境 → 派最小任务 → 验证 commit 落盘
+
+## 🧭 工作流全景
+
+![D2W 双 AI 协作开发闭环工作流](assets/d2w_workflow_v1.5.19.png)
+
+## 🎯 两种模式
+
+| 模式 | 谁干活 | 谁派活/审核 | 用什么 | 特点 |
+|---|---|---|---|---|
+| **模式 A** | WorkBuddy | 豆包 | `dispatch.py`（API 直连 CLI） | 全自动：派活 → 干活 → 审核 → 派修，收敛闭环 |
+| **模式 B** | 豆包 | WorkBuddy | `inbox/tasks` + `poll_tasks.py` | 文件信箱：写任务单 → 通知 → 轮询执行 → mark |
+
+- **模式 B 兜底**（v1.5.18+）：任务单放置超 100s 无结果 → `fallback_self_review.py --run` 自动接管
+  （干活 run + 独立模型审核 run → 收敛/派修 → 自动 mark），豆包复活看到"已处理"直接跳过，无冲突
+- **混用**：同项目可 A/B 并行（不同工作区），或一方干活另一方审核
 
 ## 🚀 30 秒上手
 
 ### 前置条件
 
-- Windows 10/11 + Python 3.9+
+- Windows 10/11 + Python 3.9+（v1.5.19 起 3.9~3.11 全部兼容）
 - [WorkBuddy 桌面版](https://workbuddy.tencent.com/) 运行并登录
 
-### 初始化项目
+### 初始化项目（技能内工具，在技能目录内运行）
 
 ```bash
 git clone https://github.com/Mine1178/d2w-skill.git
-python scripts/init_project.py D:\path\新项目 --with-templates   # 技能内工具，在技能目录内运行
+cd d2w-skill
+python scripts/init_project.py D:\path\新项目 --with-templates
+# 初始化后：dispatch / poll_tasks / notify_doubao / fallback_self_review 已部署到项目根
 ```
 
-### 派第一个活
+### 派第一个活（项目根运行，无前缀）
 
 ```bash
-python dispatch.py "在 <cwd> 目录：写一个 hello.py，打印 'Hello from WorkBuddy'。   # 项目根运行（已部署）
+python dispatch.py "在 <cwd> 目录：写一个 hello.py，打印 'Hello from WorkBuddy'。
 要求：1) py_compile 通过；2) git commit。不要修改其他文件。" --timeout 120
 ```
 
-### 冒烟自检
+### 冒烟自检（项目根运行）
 
 ```bash
-python dispatch.py --smoke --cwd D:\path\test-project   # 项目根运行（已部署）
+python dispatch.py --smoke --cwd D:\path\test-project
 ```
 
-## 🎯 工作流
+> 💡 **命令语境**：部署到项目根的 4 个脚本（dispatch / poll_tasks / notify_doubao / fallback_self_review）
+> 一律在**项目根**用无前缀命令运行；只有技能内工具（init_project.py / gen_checklist.py）用 `scripts/` 前缀。
 
-```
-派活方(甲方)                干活方(乙方)
-     │                          │
-     │── 任务文本(四要素) ─────▶│  写代码 + selftest + commit
-     │                          │
-     │◀──── git log 新 commit ──│
-     │                          │
-     │── 审核报告(P0/P1/P2) ──▶│  按意见修改
-     │                          │
-     │◀──── 新 commit ──────────│
-     │                          │
-     └── 连续两轮 NO_P0 → 收敛 ─┘
-                ↓
-        自动打包 EXE + 安装程序 + PDF 手册
-```
-
-## 📋 常用命令
-
-> 以下命令在**项目根**运行（dispatch / poll_tasks / notify_doubao / fallback_self_review 已由 init_project 部署到项目根）；
-> 技能内工具（init_project.py / gen_checklist.py）在技能目录内用 `scripts/` 前缀运行。
+## 📋 常用命令（项目根运行）
 
 | 命令 | 作用 |
 |---|---|
@@ -87,10 +95,12 @@ python dispatch.py --smoke --cwd D:\path\test-project   # 项目根运行（已�
 | `dispatch.py --status` | 查 token / CLI / serve 状态 |
 | `dispatch.py --smoke` | 一键冒烟自检 |
 | `dispatch.py --auto-review` | 自动生成审核草稿 |
-| `dispatch.py --queue tasks.txt` | 批量派活（无穷任务） |
+| `dispatch.py --queue tasks.txt` | 批量派活 |
 | `dispatch.py --list-runs` | 查派活历史 |
 | `dispatch.py --stop-all` | 清理孤儿进程 |
 | `poll_tasks.py` | 模式 B 轮询 WorkBuddy 派来的活 |
+| `fallback_self_review.py --run` | 豆包不响应时自动兜底（干活+独立审核+收敛+mark） |
+| `notify_doubao.py --send --task "..."` | 通知豆包处理任务单（剪贴板被锁自动键盘降级） |
 
 ## 📁 项目结构
 
@@ -98,23 +108,25 @@ python dispatch.py --smoke --cwd D:\path\test-project   # 项目根运行（已�
 d2w-skill/
 ├── SKILL.md                  # 技能入口（双模式/派活/审核/交付/常见坑）
 ├── CHANGELOG.md              # 版本记录 v1.0.0 → v1.5.19
+├── README.md                 # 本页
 ├── scripts/
 │   ├── dispatch.py           # 派活桥（token/serve/SSE/模型切换/危险拦截/--smoke）
 │   ├── poll_tasks.py         # 任务队列轮询
 │   ├── notify_doubao.py      # 模式 B 通知器（剪贴板/键盘输入降级）
-│   ├── fallback_self_review.py # 模式 B 兜底自审自查（超时→干活+独立审核→收敛→mark）
+│   ├── fallback_self_review.py # 模式 B 兜底自审自查
 │   ├── init_project.py       # 项目初始化向导
 │   ├── gen_checklist.py      # PRD → CHECKLIST 自动生成
 │   ├── sync_copies.py        # 副本同步防御
 │   └── extract_jwt.py        # 备用 token 扫描
 ├── references/
 │   ├── setup.md              # 环境/认证/模型清单
-│   ├── methodology.md        # 完整方法论（26 节踩坑沉淀）
-│   └── troubleshooting.md    # 23 个真实踩坑记录
+│   ├── methodology.md        # 完整方法论（踩坑沉淀）
+│   └── troubleshooting.md    # 真实踩坑记录
 └── assets/
-    ├── templates/            # 9 个模板（PRD/CHECKLIST/审核/任务/手册/DOD/selftest）
+    ├── templates/            # 模板（PRD/CHECKLIST/审核/任务/手册/DOD/selftest）
     ├── ui_spec/              # Wifibond 布局规范 + PDF 手册样式
-    └── money_code/           # 收款码（赞助用）
+    ├── money_code/           # 收款码（赞助用）
+    └── d2w_workflow_v1.5.19.png  # 工作流全景图
 ```
 
 ## ⚠️ 红线
