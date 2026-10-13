@@ -142,6 +142,12 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
   Chrome_MessageWindow 稳定持有，OpenClipboard 报 error 5），脚本会**自动降级**为 SendInput
   键盘逐字输入；首次先 `--pick` 标定输入框坐标（把鼠标移入豆包输入框后运行），详见该脚本 docstring。
 - **定时**：建每小时 cron 任务（模板 B，见 assets/templates/cron_query.template.md），到点自动轮询处理并汇报
+- **兜底（豆包不响应时，v1.5.18 新增）**：任务单放置超过 `--threshold` 秒（默认 100）且
+  `inbox/results/` 无对应结果 → 判定豆包不响应 → `python scripts/fallback_self_review.py --cwd D:/proj --run`
+  接管闭环：**干活 run（work_model，默认 glm-5.3）+ 独立模型审核 run**（审核首选模型 ≠ 干活模型时直接用；
+  相同则自动切 `kimi-k2.8-preview`，再不响应切 `balanced-model`）→ 有 P0 派修再审（最多 `--max-rounds` 轮）→
+  NO_P0 收敛 → **自动 mark**（豆包再轮询看到"已处理"直接跳过，无冲突）。全程走 CLI 通道，不依赖豆包、
+  桌面 UI 不可见、不扣桌面积分（观察事实非承诺）。`--check` 只列出待兜底任务。
 - WorkBuddy 侧由用户告知约定：任务写 inbox/tasks/，结果读 inbox/results/
 
 ## 四、公共通信协议（两模式通用）
@@ -231,6 +237,8 @@ scripts/
   dispatch.py       模式 A 派活桥（token 提取 + serve + 派任务 + 读结果 + 模型选择 + 危险命令拦截
                     + CLI 自动探测 + --queue/--list-runs/--stop-all/--auto-review/--smoke）
   poll_tasks.py     模式 B 任务队列轮询（列任务 / 标记已处理 / 撤销标记 / 重置）
+  fallback_self_review.py 模式 B 兜底（豆包不响应时 WorkBuddy 自审自查：超时判据 + 干活 run +
+                    独立模型审核 run（glm-5.3→kimi-k2.8-preview→balanced-model 回退）+ 收敛/派修 + 自动 mark）
   notify_doubao.py  模式 B 通知器（WorkBuddy→豆包：写任务单+拼指令+进剪贴板+叫醒豆包+自动发送；
                     剪贴板被锁时 --type/--send 自动降级为 SendInput 键盘逐字输入，--pick 标定输入框坐标）
   init_project.py   项目初始化向导（git+身份+.gitignore+inbox+复制脚本+模板，一条命令）

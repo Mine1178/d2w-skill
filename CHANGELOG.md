@@ -3,6 +3,34 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.18] — 2026-10-13
+
+模式 B 兜底自审自查：豆包不响应（任务单放置超 threshold 秒且无结果）时，WorkBuddy 经 CLI 通道自己闭环。
+
+### Added
+
+- **新脚本 `scripts/fallback_self_review.py`**（复用 dispatch.py 的 token 提取 / serve / POST runs / SSE）：
+  - `--check`（默认）：列出"已超时未响应"任务；`--run`：对超时任务执行兜底并自动 mark；
+    `--all`：列出全部未处理任务
+  - 兜底 = **干活 run**（work_model，默认 glm-5.3）+ **独立模型审核 run**：审核首选模型
+    （默认 glm-5.3）与干活模型不同则直接用；相同自动切 `kimi-k2.8-preview`；kimi 不响应
+    再切 `balanced-model`（WorkBuddy 均衡档）。"不响应"判据 = 派活异常 或 审核结果文件未生成
+  - 收敛循环：审核文件按协议写 `STATUS: NO_P0 / HAS_P0`（判定以该行为准）；有 P0 → 派修再审，
+    最多 `--max-rounds` 轮（默认 3）
+  - 完成自动写 `last_task_processed.txt`（`--no-mark` 关闭）→ 豆包再轮询看到"已处理"直接跳过，无冲突
+- `SKILL.md` 模式 B"工作流触发方式"新增兜底说明；资源索引补脚本。
+
+### Verified（真实端到端两次）
+
+- `py_compile` 通过；超时判据（mtime 200s 前 + 无结果 → 识别为待兜底）正确
+- 真实 `--run`（临时测试项目，任务=建 fallback_smoke.txt + commit）：
+  - 干活 run（glm-5.3）：产物/结果单/两次 commit 全部真实落盘
+  - 审核 run（自动切 kimi-k2.8-preview）：写 review_round1.md，末行 `STATUS: NO_P0`，收敛
+  - 审核模型独立性生效：审核发现真实 P1/P2（.cache 未忽略等），仍判 NO_P0 收敛
+  - 自动 mark → 豆包轮询显示"已处理序号: 1，无新任务"
+- 说明：PowerShell 端 exit 1 为 stderr 输出包装（dispatch.py 日志打到 stderr），脚本本身收敛退出
+
+
 ## [1.5.17] — 2026-10-13
 
 模式 B 通知器（notify_doubao.py）增加**剪贴板被锁时的键盘输入降级路径**——实测发现系统剪贴板被 WorkBuddy 锁定，纯剪贴板方案在本机不可用。
