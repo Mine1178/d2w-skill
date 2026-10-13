@@ -41,20 +41,20 @@
 
 ```bash
 git clone https://github.com/Mine1178/d2w-skill.git
-python scripts/init_project.py D:\path\新项目 --with-templates
+python scripts/init_project.py D:\path\新项目 --with-templates   # 技能内工具，在技能目录内运行
 ```
 
 ### 派第一个活
 
 ```bash
-python scripts/dispatch.py "在 <cwd> 目录：写一个 hello.py，打印 'Hello from WorkBuddy'。
+python dispatch.py "在 <cwd> 目录：写一个 hello.py，打印 'Hello from WorkBuddy'。   # 项目根运行（已部署）
 要求：1) py_compile 通过；2) git commit。不要修改其他文件。" --timeout 120
 ```
 
 ### 冒烟自检
 
 ```bash
-python scripts/dispatch.py --smoke --cwd D:\path\test-project
+python dispatch.py --smoke --cwd D:\path\test-project   # 项目根运行（已部署）
 ```
 
 ## 🎯 工作流
@@ -77,6 +77,9 @@ python scripts/dispatch.py --smoke --cwd D:\path\test-project
 
 ## 📋 常用命令
 
+> 以下命令在**项目根**运行（dispatch / poll_tasks / notify_doubao / fallback_self_review 已由 init_project 部署到项目根）；
+> 技能内工具（init_project.py / gen_checklist.py）在技能目录内用 `scripts/` 前缀运行。
+
 | 命令 | 作用 |
 |---|---|
 | `dispatch.py "任务"` | 派活给 WorkBuddy（∞ 不扣积分） |
@@ -94,10 +97,12 @@ python scripts/dispatch.py --smoke --cwd D:\path\test-project
 ```
 d2w-skill/
 ├── SKILL.md                  # 技能入口（双模式/派活/审核/交付/常见坑）
-├── CHANGELOG.md              # 版本记录 v1.0.0 → v1.5.11
+├── CHANGELOG.md              # 版本记录 v1.0.0 → v1.5.19
 ├── scripts/
 │   ├── dispatch.py           # 派活桥（token/serve/SSE/模型切换/危险拦截/--smoke）
 │   ├── poll_tasks.py         # 任务队列轮询
+│   ├── notify_doubao.py      # 模式 B 通知器（剪贴板/键盘输入降级）
+│   ├── fallback_self_review.py # 模式 B 兜底自审自查（超时→干活+独立审核→收敛→mark）
 │   ├── init_project.py       # 项目初始化向导
 │   ├── gen_checklist.py      # PRD → CHECKLIST 自动生成
 │   ├── sync_copies.py        # 副本同步防御

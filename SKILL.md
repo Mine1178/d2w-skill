@@ -20,7 +20,10 @@ description: 双 AI 协作开发闭环（豆包 ⇄ WorkBuddy，双向，即 Do-
 
 ## 一、准备（一次性，两模式共用）
 
-1. **环境验证**：WorkBuddy 桌面版运行并登录；`python scripts/dispatch.py --status` 应打印 `token: 有效`（无效/401 见 references/troubleshooting.md §4，提取方式见 setup.md §5）
+0. **命令语境（重要）**：`init_project.py` / `gen_checklist.py` 是技能内工具，在技能目录内用 `scripts/` 前缀运行；
+   初始化后 `dispatch.py` / `poll_tasks.py` / `notify_doubao.py` / `fallback_self_review.py` 已部署到**项目根**，
+   项目内直接用无前缀命令（如 `python dispatch.py "..."`）。
+1. **环境验证**：WorkBuddy 桌面版运行并登录；`python dispatch.py --status` 应打印 `token: 有效`（无效/401 见 references/troubleshooting.md §4，提取方式见 setup.md §5）
 2. **项目初始化（推荐一条命令）**：
    ```bash
    python scripts/init_project.py D:\path\新项目 --with-templates
@@ -137,13 +140,13 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
 ### 工作流触发方式
 - **按需**：用户说"看下任务队列" → 跑 poll_tasks.py 处理
 - **通知器（推荐，替代人工喊话）**：WorkBuddy 侧用
-  `python scripts/notify_doubao.py --send --task "..."` 自动把任务单写进 inbox、拼好指令、
+  `python notify_doubao.py --send --task "..."` 自动把任务单写进 inbox、拼好指令、
   叫醒豆包并发送。**剪贴板被 WorkBuddy 自身锁定时**（实测：系统剪贴板被 WorkBuddy.exe 的
   Chrome_MessageWindow 稳定持有，OpenClipboard 报 error 5），脚本会**自动降级**为 SendInput
   键盘逐字输入；首次先 `--pick` 标定输入框坐标（把鼠标移入豆包输入框后运行），详见该脚本 docstring。
 - **定时**：建每小时 cron 任务（模板 B，见 assets/templates/cron_query.template.md），到点自动轮询处理并汇报
 - **兜底（豆包不响应时，v1.5.18 新增）**：任务单放置超过 `--threshold` 秒（默认 100）且
-  `inbox/results/` 无对应结果 → 判定豆包不响应 → `python scripts/fallback_self_review.py --cwd D:/proj --run`
+  `inbox/results/` 无对应结果 → 判定豆包不响应 → `python fallback_self_review.py --cwd D:/proj --run`
   接管闭环：**干活 run（work_model，默认 glm-5.3）+ 独立模型审核 run**（审核首选模型 ≠ 干活模型时直接用；
   相同则自动切 `kimi-k2.8-preview`，再不响应切 `balanced-model`）→ 有 P0 派修再审（最多 `--max-rounds` 轮）→
   NO_P0 收敛 → **自动 mark**（豆包再轮询看到"已处理"直接跳过，无冲突）。全程走 CLI 通道，不依赖豆包、
@@ -269,12 +272,12 @@ CHANGELOG.md        版本变更记录
 
 **推荐一条命令**（v1.5.3 起）：
 ```bash
-python scripts/dispatch.py --smoke --cwd <测试项目路径>
+python dispatch.py --smoke --cwd <测试项目路径>   # 项目根运行（已部署）
 ```
 自动完成：环境检查（token/CLI/serve）→ 派最小任务（建 smoke_test.txt + commit）→ 验证产物文件与 commit 真实落盘。退出码 0=PASS，1=FAIL。
 
 **手动四步（等价）**：
-1. `python scripts/dispatch.py --status` → 应打印 `token: 有效`、`CLI: <路径>`（serve 未运行也正常，派活时会自动拉起）
+1. `python dispatch.py --status` → 应打印 `token: 有效`、`CLI: <路径>`（serve 未运行也正常，派活时会自动拉起）
 2. 派一个最小任务（建一个文件 + commit；建议带 `--auto-review` 验证审核草稿生成）
 3. 验收：产物文件与 `git log` 的 commit 都真实存在；`inbox/review_roundN.md` 草稿生成 → 闭环可用
 4. 任一失败 → 先查 `references/troubleshooting.md` §14（502/代理）、§15（401/鉴权）、§20（CLI 找不到）

@@ -519,7 +519,7 @@ def auto_review(cwd):
 {diff}
 ```
 - py_compile：{comp_ok}
-{f"- 语法错误详情：\n```\n{comp_detail}\n```" if comp_detail else ""}
+{detail_block}
 
 ## 总体结论（待填）
 
@@ -610,6 +610,23 @@ def smoke(cwd, timeout=120):
     print(f"      before={before[:8]}  after={(after or 'None')[:8]}")
     if ok_file and ok_commit:
         print("\nPASS: D2W 闭环可用。smoke_test.txt 与 smoke commit 可保留，或用 git reset --hard <before> 清理。")
+        # v1.5.19: BUG-3 修复——smoke/派活产生 .cache/，未忽略则幂等追加 .gitignore
+        gitignore = os.path.join(cwd, ".gitignore")
+        gi = ""
+        if os.path.exists(gitignore):
+            try:
+                gi = open(gitignore, encoding="utf-8").read()
+            except Exception:
+                gi = ""
+        if ".cache/" not in gi:
+            with open(gitignore, "a", encoding="utf-8") as fh:
+                if gi and not gi.endswith("\n"):
+                    fh.write("\n")
+                fh.write("# D2W 运行缓存（serve.pid/runs.json/wb_token.txt）\n.cache/\n")
+            print("\n提示: 已把 .cache/ 追加到 .gitignore（smoke/派活产生的运行缓存不入库）。")
+        else:
+            print("\n提示: .gitignore 已忽略 .cache/，无残留。")
+        
     else:
         print("\nFAIL: 产物或 commit 缺失——agent 可能漏 commit，查 references/troubleshooting.md §17(SSE断/漏commit)。")
         sys.exit(1)

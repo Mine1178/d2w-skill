@@ -3,6 +3,39 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.19] — 2026-10-13
+
+修复外部验收测试（WorkBuddy 独立复核 v1.5.18）发现的 3 项 BUG：P0 语法兼容 / P1 文档命令语境 / P2 smoke 残留。
+
+### Fixed
+
+- **BUG-1（P0）**：`dispatch.py` 的 `--auto-review` 审核草稿在 f-string 表达式内使用了反斜杠
+  （`{f"...\n..." if ...}`，522 行），Python < 3.12 直接 `SyntaxError`，**整个脚本无法运行**——
+  与 SKILL.md 声称的 "Python 3.9+" 前置条件矛盾。改用第 501 行已定义却没用上的 `detail_block`
+  变量（字符串拼接，无 f-string 内反斜杠）。实测：Python 3.11 / 3.12 / 3.14 三版本编译全部通过，
+  3.11 下 `import dispatch` 正常。
+- **BUG-2（P1）**：文档命令语境不一致——`init_project.py` 把脚本部署到**项目根**，但 README /
+  SKILL.md 多处示例写 `python scripts/xxx.py`（子目录），照抄必然 "No such file or directory"；
+  且 `fallback_self_review.py` 依赖同目录 `import dispatch`，双位置更混乱。统一（方案 A+）：
+  - `init_project.py` 部署列表加入 `fallback_self_review.py`（与 dispatch 同根，import 稳定）
+  - README / SKILL.md 全部命令统一为：**部署到项目根的脚本（dispatch/poll_tasks/notify_doubao/
+    fallback_self_review）在项目根无前缀运行**；**技能内工具（init_project/gen_checklist）保留
+    `scripts/` 前缀**并注明"在技能目录内运行"
+- **BUG-3（P2）**：`--smoke` 运行产生 `.cache/`（serve.pid/runs.json/wb_token.txt），在无
+  `.gitignore` 的项目里留下未跟踪残留。修复：smoke PASS 后检查项目 `.gitignore`，未忽略 `.cache/`
+  则幂等追加（含换行处理），并打印提示。实测：无 `.gitignore` 临时项目跑 `--smoke` → PASS +
+  自动生成 `.gitignore`（含 `.cache/`），`git status` 不再出现 `.cache/` 未跟踪。
+
+### Verified
+
+- Python 3.11 / 3.12 / 3.14 三版本 `py_compile`：`dispatch.py`、`init_project.py`、
+  `fallback_self_review.py`、`poll_tasks.py`、`notify_doubao.py` 全部 PASS
+- 3.11 真实加载 `import dispatch` 成功（BUG-1 修复验收）
+- 真实 `--smoke --cwd <无.gitignore临时项目>`：全链路 PASS（token→派最小任务→产物+commit 落盘），
+  且 `.cache/` 自动追加到 `.gitignore`
+- 文档命令抽查：README L50/L57、SKILL.md 环境验证/notify/fallback/smoke 全部为项目根无前缀写法
+
+
 ## [1.5.18] — 2026-10-13
 
 模式 B 兜底自审自查：豆包不响应（任务单放置超 threshold 秒且无结果）时，WorkBuddy 经 CLI 通道自己闭环。

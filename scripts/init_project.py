@@ -81,7 +81,7 @@ def main():
     print("[inbox] 通信信箱就绪（inbox/tasks + inbox/results）")
 
     # 5. 复制派活桥
-    for script in ("dispatch.py", "poll_tasks.py", "notify_doubao.py"):
+    for script in ("dispatch.py", "poll_tasks.py", "notify_doubao.py", "fallback_self_review.py"):  # 兜底脚本依赖同目录 dispatch，须一起部署
         src = os.path.join(SCRIPT_DIR, script)
         dst = os.path.join(proj, script)
         if os.path.exists(src):
