@@ -18,9 +18,10 @@
   - 收敛循环：审核文件按协议写 `STATUS: NO_P0 / HAS_P0`（判定以该行为准）；有 P0 → 派修再审，
     最多 `--max-rounds` 轮（默认 3）
   - 完成自动写 `last_task_processed.txt`（`--no-mark` 关闭）→ 豆包再轮询看到"已处理"直接跳过，无冲突
+- 干活 run 后新增**产物自检**：结果单未生成 → fail-work；git 无新 commit → 打印警告（审核重点查）
 - `SKILL.md` 模式 B"工作流触发方式"新增兜底说明；资源索引补脚本。
 
-### Verified（真实端到端两次）
+### Verified（真实端到端三次）
 
 - `py_compile` 通过；超时判据（mtime 200s 前 + 无结果 → 识别为待兜底）正确
 - 真实 `--run`（临时测试项目，任务=建 fallback_smoke.txt + commit）：
@@ -28,6 +29,11 @@
   - 审核 run（自动切 kimi-k2.8-preview）：写 review_round1.md，末行 `STATUS: NO_P0`，收敛
   - 审核模型独立性生效：审核发现真实 P1/P2（.cache 未忽略等），仍判 NO_P0 收敛
   - 自动 mark → 豆包轮询显示"已处理序号: 1，无新任务"
+- **收敛循环 P0 分支实测**（任务=原样写 `print('1'+1)`，验收=能运行输出 2）：
+  干活 → 审核1（kimi）判 `STATUS: HAS_P0` → 派修（glm-5.3 改 `'1'`→`1`）→ 审核2（kimi 实测
+  输出 2 + git diff 核验）判 `STATUS: NO_P0` → 收敛 → 自动 mark。git log 三阶段
+  （task→fix→review2）完整
+- 极端场景（审核模型链全部不响应，SSE `Error: aborted`）正确降级：fail-review + mark + 人工核查提示，不卡队列
 - 说明：PowerShell 端 exit 1 为 stderr 输出包装（dispatch.py 日志打到 stderr），脚本本身收敛退出
 
 

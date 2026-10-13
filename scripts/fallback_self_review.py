@@ -7,7 +7,7 @@ fallback_self_review.py — 模式 B 兜底：豆包不响应时，WorkBuddy 经
         run#1 干活   （work_model，默认与 dispatch 一致：WB_MODEL 或 glm-5.3）
         run#2 审核   （review_model，默认 glm-5.3；若与干活模型相同自动切
                        kimi-k2.8-preview；kimi 再不响应切 balanced-model）
-      审核发现 P0 → 派修再审（最多 max_rounds 轮）；无 P0 收敛 → 写结果 → --mark NNN。
+      审核发现 P0 → 派修再审（最多 max_rounds 轮）；无 P0 收敛 → 自动 mark（--no-mark 关闭）。
 
 审核模型选择（v1.5.18 用户拍板）：
   primary（默认 glm-5.3）≠ 干活模型 → 直接用 primary
@@ -191,6 +191,18 @@ def handle_one(cwd, seq, title, task_path, args):
     if not ok:
         print("   → 干活失败，本轮任务标记为已处理（避免卡队列），需人工核查。")
         return "fail-work", None
+    # 干活后产物自检（实测补充：agent 可能写完代码却漏结果单/漏 commit）
+    if not glob.glob(os.path.join(cwd, "inbox", "results", "%03d_*.md" % seq)):
+        print("   → 干活未产出结果单（%03d_*.md），标记已处理，需人工核查。" % seq)
+        return "fail-work", None
+    try:
+        import subprocess
+        r = subprocess.run(["git", "log", "--oneline", "-1"], cwd=cwd,
+                           capture_output=True, text=True, timeout=10)
+        if r.returncode != 0 or not r.stdout.strip():
+            print("   ⚠ 干活后 git 无新 commit（任务文本已要求提交）——审核会重点查，请留意。")
+    except Exception:
+        pass
 
     # 审核轮（含模型回退）
     has_p0 = None
