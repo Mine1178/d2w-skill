@@ -10,13 +10,15 @@
 
 ### 1.2 headless CLI 入口（派活桥核心）
 - 典型路径（以实际探测为准）：
-  `E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js`
-- **自动探测（v1.5.0 起，v1.5.1 跨盘符）**：dispatch.py 在默认路径不存在时按顺序尝试——
+  `E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-lite-wb.mjs`（新版入口）
+  （旧版入口为 `codebuddy-headless.js`，v1.5.20 起两代自动识别）
+- **自动探测（v1.5.0 起，v1.5.1 跨盘符，v1.5.20 两代入口）**：dispatch.py 自动识别两代 CLI 入口名
+  （新版 `codebuddy-lite-wb.mjs` 优先、旧版 `codebuddy-headless.js` 兜底），默认路径不存在时按顺序尝试——
   `WB_CLI_PATH` 环境变量 → 常见安装目录 glob（Program Files* / D 盘 / 用户级 Programs）→ **跨盘符全盘扫描**（枚举 C~Z 盘 × 常见安装层级，含 LenovoSoftstore/Program Files/用户 Programs/两级目录）→ 从运行中的 WorkBuddy 进程推导；全部失败才报错提示。
   `python dispatch.py --status` 会直接显示解析到的 CLI 路径。
 - 手工探测命令：
   ```powershell
-  Get-ChildItem "E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist" -Filter "codebuddy-headless.js"
+  Get-ChildItem "E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist" -Filter "codebuddy-*"
   ```
 - 版本信息在 `resources/app.asar.unpacked/cli/product.json`（如 v2.156.0）
 - **注意**：`bin\codebuddy` 是坏入口（require 不存在的 dist/codebuddy），不要用它
@@ -41,7 +43,7 @@ python scripts/dispatch.py --status
 ```
 token: 有效
 serve: 运行中（或 未运行——派活时会自动拉起）
-CLI: <解析到的 codebuddy-headless.js 路径>
+CLI: <解析到的 codebuddy-lite-wb.mjs / codebuddy-headless.js 路径>
 默认模型: glm-5.3
 ```
 

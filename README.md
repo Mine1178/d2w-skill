@@ -8,7 +8,7 @@
 > 自动跑通 **需求 → 写码 → 审核 → 改 bug → 收敛 → 打包 EXE → 安装程序 → 使用手册** 全流程。
 > **无需手动切换窗口、无需手动复制代码、无需手动复核——AI 闭环，你拍板。**
 
-[![version](https://img.shields.io/badge/version-v1.5.19-blue)](https://github.com/Mine1178/d2w-skill)
+[![version](https://img.shields.io/badge/version-v1.5.20-blue)](https://github.com/Mine1178/d2w-skill)
 [![python](https://img.shields.io/badge/Python-3.9%2B-3776AB)]()
 [![license](https://img.shields.io/badge/License-MIT-green)]()
 

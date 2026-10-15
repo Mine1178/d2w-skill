@@ -206,7 +206,7 @@ Python `urllib` **默认走环境代理**，于是连 `127.0.0.1:51741` 的请�
 1. `WB_CLI_PATH` 环境变量是否设置（最高优先）
 2. 常见安装目录 glob：`E:\LenovoSoftstore\Install\WorkBuddy\...`、`C:\Program Files*\*\WorkBuddy\...`、`D:\*\WorkBuddy\...`
 3. 从运行中的 WorkBuddy 进程 `ExecutablePath` 推导（需桌面版在跑）
-**解决**：设 `WB_CLI_PATH` 指向 codebuddy-headless.js，或先启动 WorkBuddy 桌面版再派活
+**解决**：设 `WB_CLI_PATH` 指向 codebuddy-lite-wb.mjs 或 codebuddy-headless.js（v1.5.20 起两代自动识别），或先启动 WorkBuddy 桌面版再派活
 **注意**：WorkBuddy 升级/换机后路径可能变化——`--status` 显示的 CLI 路径是最新判据
 
 ## 21. 危险命令被拦截（误伤怎么处理）

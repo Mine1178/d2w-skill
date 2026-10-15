@@ -48,8 +48,10 @@ import argparse, base64, glob, json, os, re, subprocess, sys, time, urllib.error
 _NO_PROXY_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 # ---------- 配置（环境变量可覆盖，便于换机/换项目） ----------
+# WorkBuddy CLI 入口名（v1.5.20：两代兼容——新版 codebuddy-lite-wb.mjs 优先，旧版 codebuddy-headless.js 兜底）
+CLI_NAMES = ("codebuddy-lite-wb.mjs", "codebuddy-headless.js")
 CLI = os.environ.get("WB_CLI_PATH",
-    r"E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js")
+    r"E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-lite-wb.mjs")
 PORT = int(os.environ.get("WB_PORT", "51741"))
 PROJECT = os.environ.get("WB_PROJECT", os.getcwd())
 # 缓存目录：WB_CACHE 可覆盖；serve 进程标记按端口隔离（多项目并发互不覆盖）
@@ -82,22 +84,25 @@ def sanitize_task(text):
     return False, None
 
 # ---------- CLI 路径自动探测 ----------
-CLI_DEFAULT_PATTERNS = [
-    r"E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
-    r"C:\Program Files*\*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
-    r"C:\Program Files*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
-    r"D:\*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
-    r"C:\Users\*\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+# 常见安装目录（glob 模式），对每个目录同时尝试两代入口名
+CLI_DEFAULT_DIRS = [
+    r"E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist",
+    r"C:\Program Files*\*\WorkBuddy\resources\app.asar.unpacked\cli\dist",
+    r"C:\Program Files*\WorkBuddy\resources\app.asar.unpacked\cli\dist",
+    r"D:\*\WorkBuddy\resources\app.asar.unpacked\cli\dist",
+    r"C:\Users\*\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\dist",
 ]
-# 跨盘符兜底模式（换机/换盘符时用）：对每个存在的盘符套用常见安装层级
-CLI_CROSS_DRIVE_PATTERNS = [
-    r"{d}:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
-    r"{d}:\*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
-    r"{d}:\*\*\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
-    r"{d}:\Program Files\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
-    r"{d}:\Program Files (x86)\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
-    r"{d}:\Users\*\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\dist\codebuddy-headless.js",
+CLI_DEFAULT_PATTERNS = [d + "\\" + n for d in CLI_DEFAULT_DIRS for n in CLI_NAMES]
+# 跨盘符兜底模式（换机/换盘符时用）：对每个存在的盘符套用常见安装层级，同样两代入口名都试
+CLI_CROSS_DRIVE_DIRS = [
+    r"{d}:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist",
+    r"{d}:\*\WorkBuddy\resources\app.asar.unpacked\cli\dist",
+    r"{d}:\*\*\WorkBuddy\resources\app.asar.unpacked\cli\dist",
+    r"{d}:\Program Files\WorkBuddy\resources\app.asar.unpacked\cli\dist",
+    r"{d}:\Program Files (x86)\WorkBuddy\resources\app.asar.unpacked\cli\dist",
+    r"{d}:\Users\*\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\dist",
 ]
+CLI_CROSS_DRIVE_PATTERNS = [d + "\\" + n for d in CLI_CROSS_DRIVE_DIRS for n in CLI_NAMES]
 
 def _drives():
     """枚举存在的盘符（C~Z），用于跨盘符扫描。"""
@@ -133,9 +138,10 @@ def _find_cli_by_proc():
         if out:
             exe = out.splitlines()[0].strip()
             base = os.path.dirname(os.path.dirname(exe))  # .../resources 的上一级
-            cand = os.path.join(base, "resources", "app.asar.unpacked", "cli", "dist", "codebuddy-headless.js")
-            if os.path.exists(cand):
-                return cand
+            for name in CLI_NAMES:
+                cand = os.path.join(base, "resources", "app.asar.unpacked", "cli", "dist", name)
+                if os.path.exists(cand):
+                    return cand
     except Exception:
         pass
     return None
@@ -281,7 +287,7 @@ def ensure_server(tok):
     cli_path = find_cli()
     if not cli_path:
         print("ERR: 未找到 WorkBuddy headless CLI（默认路径与常见目录都不存在）", file=sys.stderr)
-        print("   解决：设环境变量 WB_CLI_PATH 指向 codebuddy-headless.js，或先运行 WorkBuddy 桌面版", file=sys.stderr)
+        print("   解决：设环境变量 WB_CLI_PATH 指向 codebuddy-lite-wb.mjs 或 codebuddy-headless.js，或先运行 WorkBuddy 桌面版", file=sys.stderr)
         sys.exit(1)
     env = dict(os.environ)
     env["CODEBUDDY_AUTH_TOKEN"] = tok

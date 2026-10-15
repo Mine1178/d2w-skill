@@ -3,6 +3,22 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.20] — 2026-10-15
+
+适配 WorkBuddy 升级：CLI 入口文件改名（codebuddy-headless.js → codebuddy-lite-wb.mjs），修复旧脚本在新版上报「CLI 未找到」。
+
+### Fixed
+
+- **CLI 探测两代兼容**：`dispatch.py` 默认路径、常见安装目录 glob、跨盘符全盘扫描、进程推导四路探测全部改为
+  同时识别两代入口名（新版 `codebuddy-lite-wb.mjs` 优先，旧版 `codebuddy-headless.js` 兜底），WorkBuddy 升级/回退均自动找到
+- **WB_CLI_PATH 手动指定保留**：仍为最高优先（环境变量显式指定即直接使用，不受两代探测影响）
+- 报错提示与 setup / troubleshooting / methodology 文档同步更新为两代描述；README 徽章版本号同步
+
+### Verified
+
+- 本机（WorkBuddy 新版）实测：CLI 目录下仅存在 `codebuddy-lite-wb.mjs`（9.4MB），旧名文件已不存在；
+  `find_cli()` 实测解析到新版 mjs 路径；py_compile 通过
+
 ## [1.5.19] — 2026-10-13
 
 修复外部验收测试（WorkBuddy 独立复核 v1.5.18）发现的 3 项 BUG：P0 语法兼容 / P1 文档命令语境 / P2 smoke 残留。

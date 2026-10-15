@@ -21,15 +21,15 @@
 | 项 | 怎么做 | 确认标准 |
 |---|---|---|
 | WorkBuddy 桌面版在运行且已登录 | 看任务栏/进程 | 能正常对话即可 |
-| headless CLI 入口存在 | 探测 `resources/app.asar.unpacked/cli/dist/codebuddy-headless.js` | 文件存在（约 11MB） |
+| headless CLI 入口存在 | 探测 `resources/app.asar.unpacked/cli/dist/` 下 `codebuddy-lite-wb.mjs`（新版）或 `codebuddy-headless.js`（旧版） | 任一存在（约 9~11MB） |
 | Node 可用 | `node --version` | 有版本号 |
 | token 可提取 | `python dispatch.py --status` | 打印 "token: 有效" |
 | serve 可启动 | `python dispatch.py --status` | 打印 "serve: 运行中/未运行"（未运行也 OK，派活时会自动拉起） |
 
 CLI 入口探测命令（PowerShell）：
 ```powershell
-Get-ChildItem "E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist" -Filter "codebuddy-headless.js"
-# 找不到时全盘搜：Get-ChildItem -Path C:\,E:\ -Recurse -Filter codebuddy-headless.js -ErrorAction SilentlyContinue 2>$null
+Get-ChildItem "E:\LenovoSoftstore\Install\WorkBuddy\resources\app.asar.unpacked\cli\dist" -Filter "codebuddy-*"
+# 找不到时全盘搜：Get-ChildItem -Path C:\,E:\ -Recurse -Filter codebuddy-* -ErrorAction SilentlyContinue 2>$null
 ```
 
 ### 1.2 项目初始化（推荐一条命令）
