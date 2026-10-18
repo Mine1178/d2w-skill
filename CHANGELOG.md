@@ -3,6 +3,21 @@
 本文件记录 Skill 的版本变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 
+## [1.5.22] — 2026-10-18
+
+GUI 规范新增第三条需求：快捷方式图标多尺寸自动生成、苹果风、无白边撑满画布。
+
+### Added
+
+- **快捷方式图标多尺寸·无白边（L14，§4.7）**：Pillow 按同一主图形批量生成 .ico（16/32/48/256）；
+  圆角方形四边贴满画布、无白边（禁止小图标悬中间+白边）；同一 ico 用于 exe（PyInstaller --icon）/
+  桌面与开始菜单快捷方式（Inno Setup IconFilename）/窗口标题栏 iconbitmap；安装后验证无白边；
+  验收清单新增 L14、派活自检新增第 15 条
+
+### Verified
+
+- UI_LAYOUT_SPEC.md §4.7 新增 + 验收 L14 + 自检 15；SKILL.md 界面质量小节同步；纯文档改动
+
 ## [1.5.21] — 2026-10-18
 
 GUI 规范新增两条硬性需求：① 生成的软件文字可选中复制；② Logo 苹果风格圆润化。

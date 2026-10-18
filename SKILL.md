@@ -101,6 +101,7 @@ python dispatch.py "在 <cwd> 目录：<任务>。要求：1) <功能点>；2) �
 - **文本排版无孤行**（v1.5.9 新增，代码产出软件最高频缺陷）：所有多行文本必设 `wraplength` 随窗口宽度刷新；段落末尾不孤字/孤行；正文 `justify=LEFT` 而非 CENTER；label 与控件同基线不重叠；不截断不省略号（详细规范见 `assets/ui_spec/UI_LAYOUT_SPEC.md §4.4`）
 - **文字可选中复制（v1.5.21 新增）**：除按钮外，界面所有文本（正文/说明/结果/列表/日志/弹窗）必须可**鼠标划线选中 + Ctrl+C 复制**——用只读 Text/Entry 或自定义 SelectableLabel，禁止默认不可选的 Label 当正文载体；按钮文字保持不可选（详细规范见 `UI_LAYOUT_SPEC.md §4.5`）
 - **Logo 苹果风格（v1.5.21 新增）**：应用 Logo/图标必须**圆润苹果风**——大圆角（≥30%）或圆形基底、简洁扁平单主图形、同色系微妙渐变、无直角无花哨；提供 16/32/48/256 多尺寸 `.ico` 并应用到窗口标题栏/任务栏/安装程序（详细规范见 `UI_LAYOUT_SPEC.md §4.6`）
+- **快捷方式图标多尺寸·无白边（v1.5.22 新增）**：自动生成多尺寸 `.ico`（16/32/48/256，Pillow 批量缩放）且**圆角方形撑满整个画布、四周无白边**（禁止小图标悬中间+白边）；同一 ico 用于 exe 图标/桌面与开始菜单快捷方式/窗口标题栏，安装后快捷方式无白边（详细规范见 `UI_LAYOUT_SPEC.md §4.7`）
 - **关于页赞助弹窗（v1.5.4 起必带，v1.5.8 细化）**：
   - 按钮：关于页底部版权信息上方，文案「☕ 赞助作者」，secondary 浅底深字（bg=#f1f5f9, fg=正文色, relief=SOLID, bd=1, padx=16, pady=6, cursor=hand2, hover activebg=#e2e8f0）
   - 弹窗：Toplevel 模态，默认 1060×880，minsize 720×560，resizable(True,True)，屏幕居中（不跟随按钮），transient+grab_set
