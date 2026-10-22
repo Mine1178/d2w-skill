@@ -9,8 +9,8 @@
 > **无需手动切换窗口、无需手动复制代码、无需手动复核——AI 闭环，你拍板。**
 
 [![version](https://img.shields.io/badge/version-v1.5.22-blue)](https://github.com/Mine1178/d2w-skill)
-[![python](https://img.shields.io/badge/Python-3.9%2B-3776AB)]()
-[![license](https://img.shields.io/badge/License-MIT-green)]()
+[![python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://github.com/Mine1178/d2w-skill)
+[![license](https://img.shields.io/badge/License-MIT-green)](https://github.com/Mine1178/d2w-skill/blob/master/LICENSE)
 
 </div>
 
